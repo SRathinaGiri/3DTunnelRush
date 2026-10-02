@@ -164,14 +164,17 @@ export class TunnelEngine {
         ctx.stroke();
       }
 
-      // Iron / Brass hoop reinforcements
+      // Glowing brass hoop reinforcements
       ctx.strokeStyle = (theme && theme.primary) || '#b45309';
       ctx.lineWidth = 8;
+      ctx.shadowColor = (theme && theme.primary) || '#f59e0b';
+      ctx.shadowBlur = 10;
       for (let j = 0; j < 512; j += 128) {
         ctx.beginPath();
         ctx.moveTo(0, j); ctx.lineTo(512, j);
         ctx.stroke();
       }
+      ctx.shadowBlur = 0;
     } else if (type === 'stone') {
       // Dark granite slate blocks
       ctx.fillStyle = (theme && theme.wallBg) || '#0f172a';
@@ -198,13 +201,16 @@ export class TunnelEngine {
         }
       }
 
-      // Ancient stone texture lines & moss highlights
-      ctx.fillStyle = 'rgba(34, 197, 94, 0.35)'; // Moss green accents
+      // Glowing bio-luminescent moss accents
+      ctx.fillStyle = 'rgba(34, 197, 94, 0.65)';
+      ctx.shadowColor = '#22c55e';
+      ctx.shadowBlur = 8;
       for (let k = 0; k < 45; k++) {
         const rx = (k * 73) % 512;
         const ry = (k * 113) % 512;
         ctx.fillRect(rx, ry, 12, 4);
       }
+      ctx.shadowBlur = 0;
     } else if (type === 'lava') {
       // Obsidian volcanic basalt
       ctx.fillStyle = (theme && theme.wallBg) || '#1c1917';
@@ -214,7 +220,7 @@ export class TunnelEngine {
       ctx.strokeStyle = (theme && theme.primary) || '#ef4444';
       ctx.lineWidth = 6;
       ctx.shadowColor = '#f97316';
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 14;
 
       for (let i = 0; i < 6; i++) {
         const startX = (i / 6) * 512;
@@ -243,7 +249,7 @@ export class TunnelEngine {
       ctx.strokeStyle = (theme && theme.primary) || '#06b6d4';
       ctx.lineWidth = 3;
       ctx.shadowColor = '#3b82f6';
-      ctx.shadowBlur = 6;
+      ctx.shadowBlur = 8;
 
       const r = 32;
       const a = 2 * Math.PI / 6;
@@ -298,6 +304,76 @@ export class TunnelEngine {
         }
       }
     }
+
+    // =========================================================================
+    // ILLUMINATED NEON WALL BILLBOARDS & MOVIE POSTERS (Living Tunnel System!)
+    // =========================================================================
+    const primaryColor = (theme && theme.primary) || '#00f0ff';
+    const secondaryColor = (theme && theme.secondary) || '#ec4899';
+
+    // 1. Vertical Glowing LED Strip Light Columns on Left & Right Edges
+    ctx.shadowColor = primaryColor;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = primaryColor;
+    ctx.fillRect(6, 0, 10, 512);
+    ctx.fillRect(496, 0, 10, 512);
+
+    ctx.shadowColor = secondaryColor;
+    ctx.fillStyle = secondaryColor;
+    ctx.fillRect(20, 0, 4, 512);
+    ctx.fillRect(488, 0, 4, 512);
+
+    // 2. Poster Billboard #1: "NEON CITY 2099 - IMAX 3D" (y = 50 to 170)
+    ctx.save();
+    ctx.fillStyle = 'rgba(8, 15, 35, 0.88)';
+    ctx.shadowColor = primaryColor;
+    ctx.shadowBlur = 14;
+    ctx.strokeStyle = primaryColor;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.roundRect(64, 50, 384, 110, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = primaryColor;
+    ctx.font = 'bold 20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🎬 NEON CITY 2099', 256, 88);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('★ ★ ★ ★ ★  NOW SHOWING IN STEREOSCOPIC 3D', 256, 114);
+    ctx.fillStyle = secondaryColor;
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText('[ FULL IMMERSION HIGHWAY ]', 256, 138);
+    ctx.restore();
+
+    // 3. Poster Billboard #2: "3D TUNNEL RUSH - WARP DRIVE" (y = 290 to 410)
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 8, 30, 0.88)';
+    ctx.shadowColor = secondaryColor;
+    ctx.shadowBlur = 14;
+    ctx.strokeStyle = secondaryColor;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.roundRect(64, 290, 384, 110, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = secondaryColor;
+    ctx.font = 'bold 20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🚀 3D TUNNEL RUSH', 256, 328);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('⚡ EXPERIENTIAL WARP SPEED HIGHWAY ⚡', 256, 354);
+    ctx.fillStyle = primaryColor;
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText('[ MAX SPEED: 500 KM/H ]', 256, 378);
+    ctx.restore();
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;

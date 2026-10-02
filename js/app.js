@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.5.1
+   Version: v4.6.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,10 +13,11 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.5.1';
+    this.version = '4.6.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
+    this.viewMode = 'CHASE'; // 'CHASE' (3rd person) or 'COCKPIT' (1st person pilot view)
     this.warmupTimer = 5;
     this.swRegistration = null;
 
@@ -141,37 +142,70 @@ class GameApp {
     this.ui.showGameOver(this.player.score, this.player.distanceTraveled);
   }
 
+  toggleViewMode() {
+    this.viewMode = (this.viewMode === 'CHASE') ? 'COCKPIT' : 'CHASE';
+    console.log(`[3D Tunnel Rush v${this.version}] View mode toggled to: ${this.viewMode}`);
+    return this.viewMode;
+  }
+
   updateCamera() {
-    // 3D Camera mathematically aims directly at the player ship (100% visible inside FOV at all times!)
-    const camZ = this.player.z + 7.0;
-    const lookZ = this.player.z - 3.0;
-
-    const camCenter = getTunnelCenter(camZ);
-    const lookCenter = getTunnelCenter(lookZ);
     const slope = getTunnelSlope(this.player.z);
-
     const shipX = (this.player.effectiveX !== undefined) ? this.player.effectiveX : this.player.x;
     const shipY = (this.player.effectiveY !== undefined) ? this.player.effectiveY : this.player.y;
 
-    // Camera position behind player
-    const camX = camCenter.x + (shipX * 0.70);
-    const camY = camCenter.y + (shipY * 0.70) + 0.9;
-    this.renderer.mainCamera.position.set(camX, camY, camZ);
+    if (this.viewMode === 'COCKPIT') {
+      // 1ST-PERSON PILOT COCKPIT VIEW
+      const shipCenter = getTunnelCenter(this.player.z);
+      const lookZ = this.player.z - 25.0;
+      const lookCenter = getTunnelCenter(lookZ);
 
-    // Look target ahead of player (Locks player in middle of FOV!)
-    const lookX = lookCenter.x + (shipX * 0.85);
-    const lookY = lookCenter.y + (shipY * 0.85) + 0.2;
-    this.renderer.mainCamera.lookAt(new THREE.Vector3(lookX, lookY, lookZ));
+      // Camera positioned inside the pilot cockpit window
+      const camX = shipCenter.x + shipX;
+      const camY = shipCenter.y + shipY + 0.35; // Pilot eye height
+      const camZ = this.player.z - 0.2;         // In front of ship origin
 
-    // Apply roll banking
-    let bankRoll = (-slope.dx * 0.30) - (this.player.tiltZ * 0.35);
+      this.renderer.mainCamera.position.set(camX, camY, camZ);
 
-    if (this.player.isLevelTransitioning) {
-      const transitionTime = 3.5 - this.player.transitionTimer;
-      bankRoll += Math.sin(transitionTime * 6.5) * 0.22;
+      // Aim camera straight down the curved tunnel ahead with steering tilt reaction
+      const lookX = lookCenter.x + shipX + (this.player.tiltZ * -2.0);
+      const lookY = lookCenter.y + shipY + (this.player.tiltX * 2.0);
+      this.renderer.mainCamera.lookAt(new THREE.Vector3(lookX, lookY, lookZ));
+
+      // Roll bank with flight inclination & steering roll
+      let bankRoll = (-slope.dx * 0.35) - (this.player.tiltZ * 0.45);
+      if (this.player.isLevelTransitioning) {
+        const transitionTime = 3.5 - this.player.transitionTimer;
+        bankRoll += Math.sin(transitionTime * 6.5) * 0.25;
+      }
+      this.renderer.mainCamera.rotation.z += bankRoll;
+
+      // In Cockpit View, hide exterior ship mesh so ship body doesn't obstruct windshield view
+      if (this.player.mesh) this.player.mesh.visible = false;
+    } else {
+      // 3RD-PERSON CHASE CAMERA VIEW
+      if (this.player.mesh) this.player.mesh.visible = true;
+
+      const camZ = this.player.z + 7.0;
+      const lookZ = this.player.z - 3.0;
+
+      const camCenter = getTunnelCenter(camZ);
+      const lookCenter = getTunnelCenter(lookZ);
+
+      const camX = camCenter.x + (shipX * 0.70);
+      const camY = camCenter.y + (shipY * 0.70) + 0.9;
+      this.renderer.mainCamera.position.set(camX, camY, camZ);
+
+      const lookX = lookCenter.x + (shipX * 0.85);
+      const lookY = lookCenter.y + (shipY * 0.85) + 0.2;
+      this.renderer.mainCamera.lookAt(new THREE.Vector3(lookX, lookY, lookZ));
+
+      let bankRoll = (-slope.dx * 0.30) - (this.player.tiltZ * 0.35);
+      if (this.player.isLevelTransitioning) {
+        const transitionTime = 3.5 - this.player.transitionTimer;
+        bankRoll += Math.sin(transitionTime * 6.5) * 0.22;
+      }
+      this.renderer.mainCamera.rotation.z += bankRoll;
     }
-
-    this.renderer.mainCamera.rotation.z += bankRoll;
 
     // Sync 3D Scene HUD transform with Camera
     this.hud3d.updateCameraTransform(this.renderer.mainCamera);

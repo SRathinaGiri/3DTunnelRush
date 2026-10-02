@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - USER INTERFACE & STATE MANAGER
-   Version: v4.5.1
+   Version: v4.6.0
    ========================================================================== */
 
 export class UIManager {
@@ -103,6 +103,24 @@ export class UIManager {
     if (gameGyroBtn) {
       gameGyroBtn.addEventListener('click', toggleGyro);
       gameGyroBtn.addEventListener('touchstart', toggleGyro, { passive: false });
+    }
+
+    // View Mode Toggle (Chase Cam vs Pilot Cockpit View)
+    const toggleView = (e) => {
+      if (e) e.preventDefault();
+      const mode = this.app.toggleViewMode();
+      this.updateViewModeUI(mode);
+    };
+
+    const menuViewBtn = document.getElementById('menuViewModeBtn');
+    if (menuViewBtn) {
+      menuViewBtn.addEventListener('click', toggleView);
+      menuViewBtn.addEventListener('touchstart', toggleView, { passive: false });
+    }
+    const gameViewBtn = document.getElementById('gameViewModeBtn');
+    if (gameViewBtn) {
+      gameViewBtn.addEventListener('click', toggleView);
+      gameViewBtn.addEventListener('touchstart', toggleView, { passive: false });
     }
 
     // 3D Viewing Guide Drawer
@@ -306,5 +324,21 @@ export class UIManager {
     if (multElR) multElR.textContent = multStr;
     if (livesElR) livesElR.textContent = livesStr;
     if (levelElR) levelElR.textContent = levelStr;
+  }
+
+  updateViewModeUI(mode) {
+    const text = (mode === 'COCKPIT') ? '🧑‍✈️ View: Cockpit' : '🎥 View: Chase';
+    const btn1 = document.getElementById('menuViewModeBtn');
+    const btn2 = document.getElementById('gameViewModeBtn');
+    if (btn1) {
+      btn1.textContent = text;
+      if (mode === 'COCKPIT') btn1.classList.add('active');
+      else btn1.classList.remove('active');
+    }
+    if (btn2) {
+      btn2.textContent = text;
+      if (mode === 'COCKPIT') btn2.classList.add('active');
+      else btn2.classList.remove('active');
+    }
   }
 }

@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY PLAYER SHIP WITH VISUAL AURAS & LIVES SYSTEM
-   Version: v4.5.1
+   Version: v4.6.0
    ========================================================================== */
 
 import { getTunnelCenter, getTunnelSlope } from './tunnel.js';
@@ -20,7 +20,7 @@ export class PlayerShip {
     this.effectiveX = 0;
     this.effectiveY = -2.8;
 
-    this.baseSpeed = 0.05; // Starting flight speed (approx 50 km/h)
+    this.baseSpeed = 0.075; // Starting flight speed (approx 75 km/h)
     this.currentSpeed = this.baseSpeed;
     this.level = 1;
     this.currentIncline = 0;
@@ -208,10 +208,11 @@ export class PlayerShip {
     const baseSetting = this.baseSpeed + levelBonus + distanceBonus;
 
     // Roller Coaster Hyper-Warp Speed Surge Multiplier during level transition
-    const warpMultiplier = this.isLevelTransitioning ? 2.2 : 1.0;
+    const warpMultiplier = this.isLevelTransitioning ? 1.8 : 1.0;
 
     const nominalSpeed = baseSetting * gravityMultiplier * warpMultiplier;
-    const targetSpeed = Math.max(0.04, nominalSpeed);
+    // Cap flight speed at 0.50 (Max 500 km/h) as requested by user!
+    const targetSpeed = Math.min(0.50, Math.max(0.065, nominalSpeed));
     this.currentSpeed = THREE.MathUtils.lerp(this.currentSpeed, targetSpeed, 0.10);
 
     // 6. Flight Movement Along Curved Tunnel Trajectory (-Z)
@@ -238,36 +239,33 @@ export class PlayerShip {
   checkObstacleCollisions(obstacles, onHit) {
     if (this.invulnerableTimer > 0 || this.isLevelTransitioning) return;
 
-    const shipBox = new THREE.Box3().setFromObject(this.mesh);
-
     for (let i = 0; i < obstacles.length; i++) {
       const obs = obstacles[i];
       if (obs.userData.hit) continue;
 
-      if (Math.abs(obs.position.z - this.z) < 1.6) {
-        const obsBox = new THREE.Box3().setFromObject(obs);
-        if (shipBox.intersectsBox(obsBox)) {
-          obs.userData.hit = true;
-          obs.visible = false; // INSTANTLY CONSUME & VANISH RED MINE!
+      // Precise 3D Euclidean distance (removes false rectangular AABB hits!)
+      const dist = this.mesh.position.distanceTo(obs.position);
+      if (dist < 1.45) {
+        obs.userData.hit = true;
+        obs.visible = false; // INSTANTLY CONSUME & VANISH RED MINE!
 
-          // Red Aura & 25% Damage
-          this.triggerAura(0xff0022, 1.0);
-          this.shield -= 25;
+        // Red Aura & 25% Damage
+        this.triggerAura(0xff0022, 1.0);
+        this.shield -= 25;
 
-          if (this.shield <= 0) {
-            this.lives--;
-            if (this.lives > 0) {
-              // Refill shield & grant 2s invulnerability window (continuous flight!)
-              this.shield = 100;
-              this.invulnerableTimer = 2.0;
-            } else {
-              this.shield = 0;
-            }
+        if (this.shield <= 0) {
+          this.lives--;
+          if (this.lives > 0) {
+            // Refill shield & grant 2s invulnerability window (continuous flight!)
+            this.shield = 100;
+            this.invulnerableTimer = 2.0;
+          } else {
+            this.shield = 0;
           }
-
-          if (onHit) onHit(this.shield, this.lives);
-          break;
         }
+
+        if (onHit) onHit(this.shield, this.lives);
+        break;
       }
     }
   }
@@ -305,8 +303,8 @@ export class PlayerShip {
     this.x = 0;
     this.y = -3.2;
     this.z = 0;
-    this.baseSpeed = 0.05;
-    this.currentSpeed = 0.05;
+    this.baseSpeed = 0.075;
+    this.currentSpeed = 0.075;
     this.level = 1;
     this.currentIncline = 0;
     this.isLevelTransitioning = false;
