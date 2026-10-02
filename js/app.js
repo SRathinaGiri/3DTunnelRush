@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v3.2.0
+   Version: v3.3.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,11 +13,12 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '3.2.0';
+    this.version = '3.3.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
     this.warmupTimer = 5;
+    this.swRegistration = null;
 
     // Core Three.js Scene
     this.scene = new THREE.Scene();
@@ -52,6 +53,12 @@ class GameApp {
   startGame() {
     console.log(`[3D Tunnel Rush v${this.version}] Starting game session with 5s focus warmup.`);
     if (this.warmupInterval) clearInterval(this.warmupInterval);
+
+    // Check for software update ONCE when game starts (if online)
+    if (this.swRegistration && navigator.onLine) {
+      console.log(`[SW v${this.version}] Checking for latest software update on game start...`);
+      this.swRegistration.update();
+    }
 
     this.player.reset();
     this.tunnel.reset();
@@ -138,30 +145,36 @@ class GameApp {
   }
 
   updateCamera() {
-    // 3D Camera tightly tracks player ship coordinates (100% visible inside FOV on all up/down elevations!)
-    const camTargetZ = this.player.z + 7.5;
-    const camCenter = getTunnelCenter(camTargetZ);
+    // 3D Camera mathematically aims directly at the player ship (100% visible inside FOV at all times!)
+    const camZ = this.player.z + 7.0;
+    const lookZ = this.player.z - 3.0;
+
+    const camCenter = getTunnelCenter(camZ);
+    const lookCenter = getTunnelCenter(lookZ);
     const slope = getTunnelSlope(this.player.z);
 
-    // Tight 88% vertical & horizontal camera tracking ensures craft NEVER leaves sight
-    const camTargetX = camCenter.x + (this.player.x * 0.88);
-    const camTargetY = camCenter.y + (this.player.y * 0.88) + 0.6;
+    const shipX = (this.player.effectiveX !== undefined) ? this.player.effectiveX : this.player.x;
+    const shipY = (this.player.effectiveY !== undefined) ? this.player.effectiveY : this.player.y;
 
-    let camPitch = -slope.pitch + (this.player.tiltX * 0.35);
-    let camYaw = -slope.yaw;
-    let camRoll = -this.player.tiltZ * 0.35;
+    // Camera position behind player
+    const camX = camCenter.x + (shipX * 0.70);
+    const camY = camCenter.y + (shipY * 0.70) + 0.9;
+    this.renderer.mainCamera.position.set(camX, camY, camZ);
 
-    // Thrilling 3D Roller-Coaster Camera Dynamic Motion during Level Warp Transition
+    // Look target ahead of player (Locks player in middle of FOV!)
+    const lookX = lookCenter.x + (shipX * 0.85);
+    const lookY = lookCenter.y + (shipY * 0.85) + 0.2;
+    this.renderer.mainCamera.lookAt(new THREE.Vector3(lookX, lookY, lookZ));
+
+    // Apply roll banking
+    let bankRoll = (-slope.dx * 0.30) - (this.player.tiltZ * 0.35);
+
     if (this.player.isLevelTransitioning) {
       const transitionTime = 3.5 - this.player.transitionTimer;
-      const bankOscillation = Math.sin(transitionTime * 6.5) * 0.22;
-      const pitchDip = Math.cos(transitionTime * 5.0) * 0.10;
-      camRoll += bankOscillation;
-      camPitch += pitchDip;
+      bankRoll += Math.sin(transitionTime * 6.5) * 0.22;
     }
 
-    this.renderer.mainCamera.position.set(camTargetX, camTargetY, camTargetZ);
-    this.renderer.mainCamera.rotation.set(camPitch, camYaw, camRoll);
+    this.renderer.mainCamera.rotation.z += bankRoll;
 
     // Sync 3D Scene HUD transform with Camera
     this.hud3d.updateCameraTransform(this.renderer.mainCamera);
@@ -263,8 +276,9 @@ class GameApp {
       });
 
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=3.2.0').then((reg) => {
+        navigator.serviceWorker.register('./sw.js?v=3.3.0').then((reg) => {
           console.log(`[SW v${this.version}] Registered successfully with scope:`, reg.scope);
+          this.swRegistration = reg;
 
           if (reg.waiting) {
             this.showUpdatePrompt(reg.waiting);
@@ -281,12 +295,6 @@ class GameApp {
               });
             }
           });
-
-          setInterval(() => {
-            if (navigator.onLine) {
-              reg.update();
-            }
-          }, 60000);
         }).catch((err) => {
           console.warn(`[SW v${this.version}] Registration failed:`, err);
         });
