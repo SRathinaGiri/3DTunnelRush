@@ -49,17 +49,16 @@ export class StereoRenderEngine {
         frameElement.classList.remove('mode-single');
         frameElement.classList.add('mode-dual');
       }
-      this.renderer.setSize(1000, 500, false);
       if (sbsDivider) sbsDivider.style.display = 'block';
     } else { // '2d' or 'anaglyph'
       if (frameElement) {
         frameElement.classList.remove('mode-dual');
         frameElement.classList.add('mode-single');
       }
-      this.renderer.setSize(500, 500, false);
       if (sbsDivider) sbsDivider.style.display = 'none';
     }
 
+    this.handleResize();
     if (this.onModeChange) this.onModeChange(newMode);
   }
 
@@ -172,6 +171,20 @@ export class StereoRenderEngine {
   }
 
   handleResize() {
-    this.setMode(this.mode);
+    const frameElement = document.getElementById('viewportFrame');
+    let w = 500;
+    let h = 500;
+
+    if (frameElement) {
+      const rect = frameElement.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        w = rect.width;
+        h = rect.height;
+      }
+    }
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.renderer.setPixelRatio(dpr);
+    this.renderer.setSize(Math.round(w), Math.round(h), false);
   }
 }

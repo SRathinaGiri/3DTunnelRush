@@ -33,6 +33,11 @@
   touch-action: manipulation;
 }
 
+html, body {
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
 body {
   background-color: var(--bg-dark);
   color: var(--text-main);
@@ -138,7 +143,7 @@ header.app-header {
   padding: 0 10px;
 }
 
-/* VIEWPORT CONTAINER (500x500 for Single 2D/Anaglyph, 1000x500 for Parallel/Cross) */
+/* Dynamic Screen Resolution-Adaptive Viewport Frame */
 .viewport-frame {
   position: relative;
   background: #000;
@@ -150,22 +155,21 @@ header.app-header {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin: 0 auto;
 }
 
-/* 2D & Anaglyph Mode Viewport Class: 500x500 */
+/* 2D & Anaglyph Mode Viewport Class: Dynamic Square */
 .viewport-frame.mode-single {
-  width: 500px;
-  height: 500px;
-  max-width: 92vw;
-  max-height: 92vw;
+  width: min(90vw, min(650px, calc(100vh - 240px)));
+  height: min(90vw, min(650px, calc(100vh - 240px)));
+  max-width: 100%;
 }
 
-/* Parallel & Cross-Eye 3D Viewport Class: 1000x500 */
+/* Parallel & Cross-Eye 3D Viewport Class: Dynamic 2:1 Aspect Ratio */
 .viewport-frame.mode-dual {
-  width: 1000px;
-  height: 500px;
-  max-width: 96vw;
-  max-height: 48vw;
+  width: min(96vw, min(1300px, calc((100vh - 240px) * 2)));
+  height: min(48vw, min(650px, calc(100vh - 240px)));
+  max-width: 100%;
 }
 
 /* Center guide divider line for SBS stereo views */
@@ -807,5 +811,23 @@ input[type="range"]::-webkit-slider-thumb {
 .hud-val.pink, .hud-val-bold.pink { color: var(--pink-glow); }
 .hud-val.amber, .hud-val-bold.amber { color: var(--amber-glow); }
 .hud-val.purple, .hud-val-bold.purple { color: var(--purple-glow); }
+
+.update-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.update-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ffffff;
+}
 
 

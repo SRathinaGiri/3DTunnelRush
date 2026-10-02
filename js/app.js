@@ -254,6 +254,7 @@ class GameApp {
   showUpdatePrompt(waitingWorker) {
     const banner = document.getElementById('updateBanner');
     const installBtn = document.getElementById('installUpdateBtn');
+    const closeBtn = document.getElementById('closeUpdateBtn');
     const versionTag = document.getElementById('updateVersionTag');
 
     if (versionTag) versionTag.textContent = `v${this.version}`;
@@ -262,6 +263,16 @@ class GameApp {
       banner.classList.remove('hidden');
       banner.style.display = 'flex';
       banner.style.opacity = '1';
+    }
+
+    if (closeBtn) {
+      closeBtn.onclick = (e) => {
+        if (e) e.preventDefault();
+        if (banner) {
+          banner.classList.add('hidden');
+          banner.style.display = 'none';
+        }
+      };
     }
 
     if (installBtn) {

@@ -172,22 +172,30 @@ export class ControlsHandler {
       switch (e.code) {
         case 'ArrowLeft':
         case 'KeyA':
+          e.preventDefault();
           this.keys.left = true;
           break;
         case 'ArrowRight':
         case 'KeyD':
+          e.preventDefault();
           this.keys.right = true;
           break;
         case 'ArrowUp':
         case 'KeyW':
+          e.preventDefault();
           this.keys.up = true;
           break;
         case 'ArrowDown':
         case 'KeyS':
+          e.preventDefault();
           this.keys.down = true;
+          break;
+        case 'Space':
+          e.preventDefault();
           break;
         case 'KeyP':
         case 'Escape':
+          e.preventDefault();
           if (this.onPauseToggle) this.onPauseToggle();
           break;
       }
@@ -197,19 +205,26 @@ export class ControlsHandler {
       switch (e.code) {
         case 'ArrowLeft':
         case 'KeyA':
+          e.preventDefault();
           this.keys.left = false;
           break;
         case 'ArrowRight':
         case 'KeyD':
+          e.preventDefault();
           this.keys.right = false;
           break;
         case 'ArrowUp':
         case 'KeyW':
+          e.preventDefault();
           this.keys.up = false;
           break;
         case 'ArrowDown':
         case 'KeyS':
+          e.preventDefault();
           this.keys.down = false;
+          break;
+        case 'Space':
+          e.preventDefault();
           break;
       }
     });
