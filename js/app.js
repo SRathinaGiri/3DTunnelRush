@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.6.0
+   Version: v4.7.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.6.0';
+    this.version = '4.7.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -179,11 +179,13 @@ class GameApp {
       }
       this.renderer.mainCamera.rotation.z += bankRoll;
 
-      // In Cockpit View, hide exterior ship mesh so ship body doesn't obstruct windshield view
+      // In Cockpit View, hide exterior ship mesh and show 3D pilot cockpit frame & crosshair reticle
       if (this.player.mesh) this.player.mesh.visible = false;
+      if (this.hud3d) this.hud3d.setCockpitVisible(true);
     } else {
       // 3RD-PERSON CHASE CAMERA VIEW
       if (this.player.mesh) this.player.mesh.visible = true;
+      if (this.hud3d) this.hud3d.setCockpitVisible(false);
 
       const camZ = this.player.z + 7.0;
       const lookZ = this.player.z - 3.0;
@@ -208,7 +210,7 @@ class GameApp {
     }
 
     // Sync 3D Scene HUD transform with Camera
-    this.hud3d.updateCameraTransform(this.renderer.mainCamera);
+    if (this.hud3d) this.hud3d.updateCameraTransform(this.renderer.mainCamera, 0.016);
   }
 
   animate(timestamp) {

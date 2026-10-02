@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v4.4.0
+   Version: v4.7.0
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -21,6 +21,7 @@ export class HUD3DEngine {
     this.highScore = parseInt(localStorage.getItem('tunnel_rush_highscore') || '0', 10);
 
     this.initHUD();
+    this.initCockpitFrame();
   }
 
   createCanvasSprite(width, height) {
@@ -43,42 +44,108 @@ export class HUD3DEngine {
     return sprite;
   }
 
-  initHUD() {
-    // 1. In-canvas 3D HUD Sprite rendered inside 3D Scene with 0 parallax stereo depth
-    this.topHudSprite = this.createCanvasSprite(500, 140);
-    this.topHudSprite.scale.set(3.1, 0.868, 1);
-    this.topHudSprite.position.set(0, 1.85, -3.5);
-    this.topHudSprite.visible = false;
-    this.hudGroup.add(this.topHudSprite);
+  initCockpitFrame() {
+    this.cockpitGroup = new THREE.Group();
+    this.hudGroup.add(this.cockpitGroup);
 
-    // 2. High Score Banner (Positioned at top of viewport during menus/warmup)
-    this.highScoreSprite = this.createCanvasSprite(400, 60);
-    this.highScoreSprite.scale.set(1.8, 0.27, 1);
-    this.highScoreSprite.position.set(0, 1.70, -3.5);
-    this.highScoreSprite.visible = false;
-    this.hudGroup.add(this.highScoreSprite);
+    // 1. Dark Metallic Titanium Windshield Pillars (Left & Right)
+    const pillarMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
 
-    // 3. Energy Boost Notification (Center High)
-    this.boostNoticeSprite = this.createCanvasSprite(500, 70);
-    this.boostNoticeSprite.scale.set(2.6, 0.364, 1);
-    this.boostNoticeSprite.position.set(0, 0.85, -3.5);
-    this.boostNoticeSprite.visible = false;
-    this.hudGroup.add(this.boostNoticeSprite);
+    // Left Pillar
+    const leftPillarGeo = new THREE.CylinderGeometry(0.06, 0.12, 3.8, 6);
+    const leftPillar = new THREE.Mesh(leftPillarGeo, pillarMat);
+    leftPillar.position.set(-2.0, 0.2, -1.8);
+    leftPillar.rotation.z = -0.35;
+    leftPillar.rotation.y = 0.2;
+    this.cockpitGroup.add(leftPillar);
 
-    // 4. Center Banner (Countdown, Pause, Game Over)
-    this.centerBannerSprite = this.createCanvasSprite(500, 200);
-    this.centerBannerSprite.scale.set(2.8, 1.12, 1);
-    this.centerBannerSprite.position.set(0, 0, -3.5);
-    this.hudGroup.add(this.centerBannerSprite);
+    // Right Pillar
+    const rightPillar = new THREE.Mesh(leftPillarGeo, pillarMat);
+    rightPillar.position.set(2.0, 0.2, -1.8);
+    rightPillar.rotation.z = 0.35;
+    rightPillar.rotation.y = -0.2;
+    this.cockpitGroup.add(rightPillar);
 
-    this.updateHUD(0, 0, '40 km/h', '100%', 'x1', 3, 0);
-    this.updateHighScore(this.highScore);
-    this.hideCenterBanner();
+    // Bottom Dashboard Frame Arc
+    const dashGeo = new THREE.BoxGeometry(4.4, 0.35, 0.5);
+    const dashMesh = new THREE.Mesh(dashGeo, pillarMat);
+    dashMesh.position.set(0, -1.25, -1.8);
+    this.cockpitGroup.add(dashMesh);
+
+    // Top Canopy Frame Bar
+    const topBarGeo = new THREE.BoxGeometry(3.6, 0.15, 0.3);
+    const topBarMesh = new THREE.Mesh(topBarGeo, pillarMat);
+    topBarMesh.position.set(0, 1.45, -1.8);
+    this.cockpitGroup.add(topBarMesh);
+
+    // 2. Cockpit Glass Aura Rim (Glows Red on mine hit, Green on crystal collect, Cyan on warp)
+    const auraRimGeo = new THREE.RingGeometry(1.6, 2.0, 32);
+    this.cockpitAuraMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.0,
+      depthTest: false,
+      depthWrite: false
+    });
+    this.cockpitAuraMesh = new THREE.Mesh(auraRimGeo, this.cockpitAuraMat);
+    this.cockpitAuraMesh.position.set(0, 0, -1.75);
+    this.cockpitGroup.add(this.cockpitAuraMesh);
+
+    // 3. Central HUD Targeting Reticle & Glass Crosshair
+    const reticleSprite = this.createCanvasSprite(200, 200);
+    reticleSprite.scale.set(0.6, 0.6, 1);
+    reticleSprite.position.set(0, -0.1, -1.70);
+
+    const ctx = reticleSprite.userData.ctx;
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.65)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(100, 100, 60, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(100, 100, 20, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(100, 20); ctx.lineTo(100, 40);
+    ctx.moveTo(100, 160); ctx.lineTo(100, 180);
+    ctx.moveTo(20, 100); ctx.lineTo(40, 100);
+    ctx.moveTo(160, 100); ctx.lineTo(180, 100);
+    ctx.stroke();
+    reticleSprite.userData.texture.needsUpdate = true;
+
+    this.cockpitGroup.add(reticleSprite);
+
+    this.cockpitAuraTimer = 0;
+    this.cockpitAuraMaxDuration = 1.0;
+    this.cockpitGroup.visible = false;
   }
 
-  updateCameraTransform(camera) {
+  setCockpitVisible(visible) {
+    if (this.cockpitGroup) {
+      this.cockpitGroup.visible = visible;
+    }
+  }
+
+  triggerCockpitAura(hexColor, durationSec = 1.0) {
+    if (!this.cockpitAuraMat) return;
+    this.cockpitAuraMat.color.setHex(hexColor);
+    this.cockpitAuraTimer = durationSec;
+    this.cockpitAuraMaxDuration = durationSec;
+    this.cockpitAuraMat.opacity = 0.90;
+  }
+
+  updateCameraTransform(camera, delta = 0.016) {
     this.hudGroup.position.copy(camera.position);
     this.hudGroup.quaternion.copy(camera.quaternion);
+
+    if (this.cockpitAuraTimer > 0) {
+      this.cockpitAuraTimer -= delta;
+      const progress = Math.max(0, this.cockpitAuraTimer / (this.cockpitAuraMaxDuration || 1.0));
+      if (this.cockpitAuraMat) {
+        this.cockpitAuraMat.opacity = progress * 0.90;
+      }
+    }
   }
 
   // Backward compatibility alias for single updates

@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY PLAYER SHIP WITH VISUAL AURAS & LIVES SYSTEM
-   Version: v4.6.0
+   Version: v4.7.0
    ========================================================================== */
 
 import { getTunnelCenter, getTunnelSlope } from './tunnel.js';
@@ -116,6 +116,11 @@ export class PlayerShip {
     this.auraMat.color.setHex(hexColor);
     this.auraMesh.visible = true;
     this.auraMat.opacity = 0.95;
+
+    // Trigger 3D Pilot Cockpit Windshield Aura flash
+    if (window.app && window.app.hud3d && typeof window.app.hud3d.triggerCockpitAura === 'function') {
+      window.app.hud3d.triggerCockpitAura(hexColor, durationSec);
+    }
   }
 
   activateEnergyBoost(durationSec = 5.0) {
