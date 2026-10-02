@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DYNAMIC CURVED 3D TUNNEL & TRACK OBSTACLE ENGINE
-   Version: v4.5.0
+   Version: v4.5.1
    ========================================================================== */
 
 export function getTunnelCenter(z) {
@@ -347,7 +347,7 @@ export class TunnelEngine {
   }
 
   initParticles() {
-    const particleCount = 300;
+    const particleCount = 75;
     const particleGeo = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
     this.particleOffsets = new Float32Array(particleCount * 3);
@@ -365,9 +365,9 @@ export class TunnelEngine {
 
     const particleMat = new THREE.PointsMaterial({
       color: 0x00f0ff,
-      size: 0.28,
+      size: 0.20,
       transparent: true,
-      opacity: 0.85
+      opacity: 0.60
     });
 
     this.speedLines = new THREE.Points(particleGeo, particleMat);
@@ -575,14 +575,14 @@ export class TunnelEngine {
       });
     }
 
-    // 3. Stream Speed Particles Past Player Along Curve (Continuous infinite particle warp)
+    // 3. Stream Ambient Space Dust Particles Past Player (Gentle natural speed)
     if (this.speedLines && this.particleOffsets) {
-      const particleSpeedMult = isTransitioning ? 3.0 : 1.2;
+      const particleSpeedMult = isTransitioning ? 2.5 : 1.0;
       const positions = this.speedLines.geometry.attributes.position.array;
 
       for (let i = 0; i < this.particleOffsets.length; i += 3) {
-        // Scroll particle Z relative to player (stream past camera towards +Z)
-        this.particleOffsets[i + 2] += speed * 60.0 * particleSpeedMult;
+        // Scroll particle Z relative to player (stream past camera towards +Z at natural speed)
+        this.particleOffsets[i + 2] += speed * 2.2 * particleSpeedMult;
 
         // When particle streams behind camera (localZ > 20), recycle ahead to -220
         if (this.particleOffsets[i + 2] > 20.0) {
