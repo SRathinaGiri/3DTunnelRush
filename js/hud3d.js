@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v4.7.0
+   Version: v4.7.1
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -42,6 +42,39 @@ export class HUD3DEngine {
     const sprite = new THREE.Sprite(mat);
     sprite.userData = { canvas, ctx: canvas.getContext('2d'), texture };
     return sprite;
+  }
+
+  initHUD() {
+    // 1. In-canvas 3D HUD Sprite rendered inside 3D Scene with 0 parallax stereo depth
+    this.topHudSprite = this.createCanvasSprite(500, 140);
+    this.topHudSprite.scale.set(3.1, 0.868, 1);
+    this.topHudSprite.position.set(0, 1.85, -3.5);
+    this.topHudSprite.visible = false;
+    this.hudGroup.add(this.topHudSprite);
+
+    // 2. High Score Banner (Positioned at top of viewport during menus/warmup)
+    this.highScoreSprite = this.createCanvasSprite(400, 60);
+    this.highScoreSprite.scale.set(1.8, 0.27, 1);
+    this.highScoreSprite.position.set(0, 1.70, -3.5);
+    this.highScoreSprite.visible = false;
+    this.hudGroup.add(this.highScoreSprite);
+
+    // 3. Energy Boost Notification (Center High)
+    this.boostNoticeSprite = this.createCanvasSprite(500, 70);
+    this.boostNoticeSprite.scale.set(2.6, 0.364, 1);
+    this.boostNoticeSprite.position.set(0, 0.85, -3.5);
+    this.boostNoticeSprite.visible = false;
+    this.hudGroup.add(this.boostNoticeSprite);
+
+    // 4. Center Banner (Countdown, Pause, Game Over)
+    this.centerBannerSprite = this.createCanvasSprite(500, 200);
+    this.centerBannerSprite.scale.set(2.8, 1.12, 1);
+    this.centerBannerSprite.position.set(0, 0, -3.5);
+    this.hudGroup.add(this.centerBannerSprite);
+
+    this.updateHUD(0, 0, '40 km/h', '100%', 'x1', 3, 0);
+    this.updateHighScore(this.highScore);
+    this.hideCenterBanner();
   }
 
   initCockpitFrame() {
