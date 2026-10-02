@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY PLAYER SHIP WITH VISUAL AURAS & LIVES SYSTEM
-   Version: v4.4.0
+   Version: v4.5.0
    ========================================================================== */
 
 import { getTunnelCenter, getTunnelSlope } from './tunnel.js';
@@ -193,8 +193,8 @@ export class PlayerShip {
     // Gentle incline pitch feedback (subtle speed sensation without steep drop!)
     const gravityMultiplier = 1.0 - slope.incline * 0.12;
 
-    // Calculate level progression bonus (speed starts at ~50 km/h and accelerates over distance & levels)
-    const newLevel = 1 + Math.floor(this.distanceTraveled / 1000);
+    // Calculate level progression bonus (speed starts at ~50 km/h and accelerates continuously over distance & levels)
+    const newLevel = 1 + Math.floor(this.distanceTraveled / 300);
     if (newLevel !== this.level) {
       this.level = newLevel;
       this.triggerLevelTransition();
@@ -203,8 +203,8 @@ export class PlayerShip {
       }
     }
 
-    const levelBonus = (this.level - 1) * 0.012;
-    const distanceBonus = (this.distanceTraveled / 1000) * 0.005;
+    const levelBonus = (this.level - 1) * 0.008;
+    const distanceBonus = (this.distanceTraveled / 100) * 0.003;
     const baseSetting = this.baseSpeed + levelBonus + distanceBonus;
 
     // Roller Coaster Hyper-Warp Speed Surge Multiplier during level transition
