@@ -335,33 +335,9 @@ export class TunnelEngine {
     this.tunnelWallMesh = new THREE.Mesh(wallGeo, wallMat);
     this.scene.add(this.tunnelWallMesh);
 
-    // 2. 16 Curved Longitudinal Depth Lines
+    // 2. 16 Curved Longitudinal Depth Lines (Disabled to prevent static line Z-fighting over scrolling texture)
     this.longitudinalLinesGroup = new THREE.Group();
-    const lineCount = 16;
-    const segments = 60;
-
-    for (let i = 0; i < lineCount; i++) {
-      const angle = (i / lineCount) * Math.PI * 2;
-      const radX = Math.cos(angle) * (this.tunnelRadius - 0.1);
-      const radY = Math.sin(angle) * (this.tunnelRadius - 0.1);
-
-      const points = [];
-      for (let s = 0; s <= segments; s++) {
-        const localZ = 200 - (s / segments) * this.totalLength;
-        points.push(new THREE.Vector3(radX, radY, localZ));
-      }
-      const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
-      lineGeo.userData = { radX, radY, segments };
-      const lineMat = new THREE.LineBasicMaterial({
-        color: theme.pPrimary,
-        linewidth: 3,
-        transparent: true,
-        opacity: 1.0
-      });
-      const lineMesh = new THREE.Line(lineGeo, lineMat);
-      this.longitudinalLinesGroup.add(lineMesh);
-    }
-    this.scene.add(this.longitudinalLinesGroup);
+    this.longitudinalLinesGroup.visible = false;
   }
 
   initTunnelRings() {
@@ -627,31 +603,35 @@ export class TunnelEngine {
       });
     }
 
-    // 3. Recycle & Position Torus Rings Along 3D Curve
-    this.tunnelRings.forEach((ring) => {
-      if (ring.position.z > playerZ + 50) {
-        ring.position.z -= 2400;
-      }
-      const center = getTunnelCenter(ring.position.z);
-      const dir = getTunnelTangent(ring.position.z);
+    // 3. Recycle & Position Torus Rings Along 3D Curve (Synchronized to scrolling wall texture)
+    const scrollOffsetZ = (this.gridTexture.offset.y / 60.0) * 2400.0;
+    const ringSpacing = 30.0;
 
-      ring.position.x = center.x;
-      ring.position.y = center.y;
-      ring.lookAt(center.x + dir.x, center.y + dir.y, ring.position.z + dir.z);
+    this.tunnelRings.forEach((ring, idx) => {
+      const baseZ = playerZ + 120.0 - (idx * ringSpacing);
+      const ringZ = baseZ - (scrollOffsetZ % ringSpacing);
+
+      const center = getTunnelCenter(ringZ);
+      const dir = getTunnelTangent(ringZ);
+
+      ring.position.set(center.x, center.y, ringZ);
+      ring.lookAt(center.x + dir.x, center.y + dir.y, ringZ + dir.z);
       ring.rotateZ(isTransitioning ? 0.015 : 0.003);
     });
 
-    // 4. Update Particle Lines along Curve (Accelerated particle stretch during warp!)
+    // 4. Stream Speed Particles Past Player Along Curve
     if (this.speedLines && this.particleOffsets) {
-      const particleSpeedMult = isTransitioning ? 3.5 : 1.5;
+      const particleSpeedMult = isTransitioning ? 3.5 : 1.2;
       const positions = this.speedLines.geometry.attributes.position.array;
       for (let i = 0; i < positions.length; i += 3) {
-        positions[i + 2] += speed * particleSpeedMult;
-        if (positions[i + 2] > playerZ + 50) {
-          positions[i + 2] -= 2400;
+        let localZ = positions[i + 2] - speed * 350.0 * particleSpeedMult;
+        if (localZ < -1800.0) {
+          localZ += 1850.0;
         }
-        const pWorldZ = positions[i + 2];
-        const center = getTunnelCenter(pWorldZ);
+        positions[i + 2] = localZ;
+
+        const worldZ = playerZ + localZ;
+        const center = getTunnelCenter(worldZ);
         positions[i] = this.particleOffsets[i] + center.x;
         positions[i + 1] = this.particleOffsets[i + 1] + center.y;
       }

@@ -20,8 +20,7 @@ export class PlayerShip {
     this.effectiveX = 0;
     this.effectiveY = -2.8;
 
-    this.userSpeedSetting = 0.06; // User chosen speed setting (0.02 to 0.30)
-    this.baseSpeed = 0.06;
+    this.baseSpeed = 0.05; // Starting flight speed (approx 50 km/h)
     this.currentSpeed = this.baseSpeed;
     this.level = 1;
     this.currentIncline = 0;
@@ -206,8 +205,9 @@ export class PlayerShip {
       }
     }
 
-    const levelBonus = (this.level - 1) * 0.005;
-    const baseSetting = (this.userSpeedSetting || 0.06) + levelBonus;
+    const levelBonus = (this.level - 1) * 0.015;
+    const distanceBonus = Math.floor(this.distanceTraveled / 250) * 0.002;
+    const baseSetting = this.baseSpeed + levelBonus + distanceBonus;
 
     // Roller Coaster Hyper-Warp Speed Surge Multiplier during level transition
     const warpMultiplier = this.isLevelTransitioning ? 2.5 : 1.0;
@@ -307,8 +307,8 @@ export class PlayerShip {
     this.x = 0;
     this.y = -3.2;
     this.z = 0;
-    this.baseSpeed = this.userSpeedSetting || 0.06;
-    this.currentSpeed = this.baseSpeed;
+    this.baseSpeed = 0.05;
+    this.currentSpeed = 0.05;
     this.level = 1;
     this.currentIncline = 0;
     this.isLevelTransitioning = false;

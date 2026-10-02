@@ -187,17 +187,6 @@ export class UIManager {
       });
     }
 
-    // Initial Game Speed Slider
-    const speedSlider = document.getElementById('speedSlider');
-    const speedSettingVal = document.getElementById('speedSettingVal');
-    if (speedSlider) {
-      speedSlider.addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        if (speedSettingVal) speedSettingVal.textContent = val.toFixed(2);
-        this.app.player.setUserSpeed(val);
-      });
-    }
-
     // Eye Swap Toggle Button
     const swapBtn = document.getElementById('swapEyesBtn');
     if (swapBtn) {
