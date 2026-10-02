@@ -138,66 +138,6 @@ export class HUD3DEngine {
 
     this.renderCockpitTelemetry('40 km/h', '100%', '0m');
   }
-    ctx.stroke();
-
-    // Corner HUD Brackets
-    ctx.strokeStyle = '#00f0ff';
-    ctx.lineWidth = 4;
-    // Top-Left
-    ctx.beginPath(); ctx.moveTo(6, 35); ctx.lineTo(6, 6); ctx.lineTo(35, 6); ctx.stroke();
-    // Top-Right
-    ctx.beginPath(); ctx.moveTo(354, 35); ctx.lineTo(354, 6); ctx.lineTo(325, 6); ctx.stroke();
-    // Bottom-Left
-    ctx.beginPath(); ctx.moveTo(6, 205); ctx.lineTo(6, 234); ctx.lineTo(35, 234); ctx.stroke();
-    // Bottom-Right
-    ctx.beginPath(); ctx.moveTo(354, 205); ctx.lineTo(354, 234); ctx.lineTo(325, 234); ctx.stroke();
-
-    // Center Rectangular Targeting Box & Crosshair
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(145, 95, 70, 50, 6);
-    ctx.stroke();
-
-    // Tactical Crosshair Ticks
-    ctx.strokeStyle = '#ec4899';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    // Top tick
-    ctx.moveTo(180, 75); ctx.lineTo(180, 90);
-    // Bottom tick
-    ctx.moveTo(180, 150); ctx.lineTo(180, 165);
-    // Left tick
-    ctx.moveTo(120, 120); ctx.lineTo(140, 120);
-    // Right tick
-    ctx.moveTo(220, 120); ctx.lineTo(240, 120);
-    ctx.stroke();
-
-    // High-Tech Cockpit HUD Telemetry Labels
-    ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
-    ctx.shadowBlur = 4;
-    ctx.fillStyle = '#00f0ff';
-    ctx.font = 'bold 11px monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText('SYS: OK | 0-PARALLAX', 22, 28);
-
-    ctx.textAlign = 'right';
-    ctx.fillText('PILOT COCKPIT', 338, 28);
-
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 10px sans-serif';
-    ctx.fillText('▼ FLIGHT VECTOR ▼', 180, 222);
-
-    ctx.shadowBlur = 0;
-    reticleSprite.userData.texture.needsUpdate = true;
-
-    this.cockpitGroup.add(reticleSprite);
-
-    this.cockpitAuraTimer = 0;
-    this.cockpitAuraMaxDuration = 1.0;
-    this.cockpitGroup.visible = false;
-  }
 
   setCockpitVisible(visible) {
     this.isCockpitView = visible;

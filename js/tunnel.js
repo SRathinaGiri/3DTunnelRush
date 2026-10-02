@@ -381,41 +381,41 @@ export class TunnelEngine {
 
     // Dark sleek Sci-Fi Frame Background
     ctx.fillStyle = poster.bg;
-    ctx.fillRect(0, 0, 512, 256);
+    ctx.fillRect(0, 0, 1024, 512);
 
     // Glowing Border Frame
     ctx.shadowColor = poster.glow;
-    ctx.shadowBlur = 16;
+    ctx.shadowBlur = 24;
     ctx.strokeStyle = poster.border;
-    ctx.lineWidth = 8;
+    ctx.lineWidth = 16;
     ctx.beginPath();
-    ctx.roundRect(12, 12, 488, 232, 16);
+    ctx.roundRect(24, 24, 976, 464, 32);
     ctx.stroke();
 
     // Inner bevel border
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.roundRect(24, 24, 464, 208, 12);
+    ctx.roundRect(48, 48, 928, 416, 24);
     ctx.stroke();
 
     // Poster Title (Line 1)
     ctx.shadowColor = poster.glow;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 18;
     ctx.fillStyle = poster.border;
-    ctx.font = 'bold 36px sans-serif';
+    ctx.font = 'bold 72px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(poster.title1, 256, 85);
+    ctx.fillText(poster.title1, 512, 170);
 
     // Subtitle (Line 2)
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 24px sans-serif';
-    ctx.fillText(poster.title2, 256, 135);
+    ctx.font = 'bold 48px sans-serif';
+    ctx.fillText(poster.title2, 512, 270);
 
     // Bottom Badge Accent
     ctx.fillStyle = poster.accent;
-    ctx.font = 'bold 18px monospace';
-    ctx.fillText(poster.sub, 256, 190);
+    ctx.font = 'bold 36px monospace';
+    ctx.fillText(poster.sub, 512, 380);
 
     ctx.shadowBlur = 0;
 
@@ -430,7 +430,7 @@ export class TunnelEngine {
     const typeIndex = Math.floor(Math.random() * 4);
     const texture = this.createBillboardTexture(typeIndex);
 
-    const geo = new THREE.PlaneGeometry(5.0, 2.5); // 2:1 Landscape aspect ratio (Lengthwise poster)
+    const geo = new THREE.PlaneGeometry(12.0, 6.0); // Epic 12x6 Massive Landscape Billboard Frame
     const mat = new THREE.MeshBasicMaterial({
       map: texture,
       side: THREE.DoubleSide
@@ -438,7 +438,7 @@ export class TunnelEngine {
 
     const billboardMesh = new THREE.Mesh(geo, mat);
 
-    const wallXOffset = isLeft ? -7.65 : 7.65;
+    const wallXOffset = isLeft ? -7.35 : 7.35;
     const wallYOffset = 0.0;
 
     const center = getTunnelCenter(zDistance);
