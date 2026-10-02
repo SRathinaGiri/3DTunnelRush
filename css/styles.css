@@ -682,3 +682,130 @@ input[type="range"]::-webkit-slider-thumb {
   box-shadow: 0 0 20px rgba(0, 240, 255, 0.8);
 }
 
+/* ==========================================================================
+   v4.0.0 TWO-PAGE ARCHITECTURE & SOLID BLOCK HUD STYLES
+   ========================================================================== */
+
+.page-container {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  transition: opacity 0.3s ease;
+}
+
+.page-container.hidden {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Page 1: Menu Content */
+.menu-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.start-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--bg-card-border);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 240, 255, 0.2);
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%;
+  max-width: 850px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.controls-guide-box {
+  background: rgba(0, 240, 255, 0.08);
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  text-align: left;
+  width: 100%;
+}
+
+/* Page 2: Gameplay Screen Header Overlay Bar */
+.game-overlay-bar {
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--bg-card-border);
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.game-bar-left, .game-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Solid Block HUD (Outside 3D Viewport, zero transparency, non-intrusive) */
+.solid-block-hud {
+  width: 100%;
+  max-width: 1000px;
+  background: #020617; /* Solid dark background, zero transparency */
+  border: 2px solid var(--cyan-glow);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+  border-radius: 14px;
+  padding: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.hud-block-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.hud-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.hud-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  font-family: monospace;
+}
+
+.hud-val-bold {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #ffffff;
+  font-family: monospace;
+}
+
+.hud-val.cyan, .hud-val-bold.cyan { color: var(--cyan-glow); }
+.hud-val.pink, .hud-val-bold.pink { color: var(--pink-glow); }
+.hud-val.amber, .hud-val-bold.amber { color: var(--amber-glow); }
+.hud-val.purple, .hud-val-bold.purple { color: var(--purple-glow); }
+
+

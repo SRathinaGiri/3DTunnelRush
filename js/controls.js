@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY INPUT & CONTROLS HANDLER (KEYBOARD, TOUCH, GYRO)
-   Version: v3.3.0
+   Version: v4.0.0
    ========================================================================== */
 
 export class ControlsHandler {
@@ -19,6 +19,13 @@ export class ControlsHandler {
     // Gyroscope / Device Orientation State
     this.gyroEnabled = false;
     this.gyroAvailable = (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window);
+    this.gyroCalibrated = false;
+    this.gyroFrames = 0;
+    this.gyroBaseRoll = 0;
+    this.gyroBasePitch = 0;
+    this.smoothedRoll = 0;
+    this.smoothedPitch = 0;
+
     this.handleOrientation = this.handleOrientation.bind(this);
 
     this.onPauseToggle = null;
@@ -55,8 +62,15 @@ export class ControlsHandler {
 
   enableGyroscope(onStateChange) {
     this.gyroEnabled = true;
+    this.gyroCalibrated = false;
+    this.gyroFrames = 0;
+    this.gyroBaseRoll = 0;
+    this.gyroBasePitch = 0;
+    this.smoothedRoll = 0;
+    this.smoothedPitch = 0;
+
     window.addEventListener('deviceorientation', this.handleOrientation, true);
-    console.log('[ControlsHandler] Gyroscope tilt steering ENABLED.');
+    console.log('[ControlsHandler] Calibrated Gyroscope tilt steering ENABLED.');
     if (onStateChange) onStateChange(true);
   }
 
@@ -69,41 +83,87 @@ export class ControlsHandler {
   }
 
   handleOrientation(event) {
-    if (!this.gyroEnabled) return;
+    if (!this.gyroEnabled || !event) return;
 
-    // gamma: roll angle [-90, 90] (tilting left < 0, right > 0)
-    // beta: pitch angle [-180, 180] (holding phone naturally ~35°-45°. Forward pitch < 25°, Backward pitch > 55°)
-    const gamma = event.gamma;
-    const beta = event.beta;
+    let rawBeta = event.beta || 0;   // [-180, 180]
+    let rawGamma = event.gamma || 0; // [-90, 90]
 
-    if (gamma !== null && gamma !== undefined) {
-      const deadzoneX = 6; // 6 degrees deadzone
-      if (gamma < -deadzoneX) {
-        this.keys.left = true;
-        this.keys.right = false;
-      } else if (gamma > deadzoneX) {
-        this.keys.right = true;
-        this.keys.left = false;
-      } else {
-        this.keys.left = false;
-        this.keys.right = false;
-      }
+    // Detect screen orientation angle (Portrait 0/180 vs Landscape 90/-90)
+    let orientationAngle = 0;
+    if (typeof window.orientation !== 'undefined') {
+      orientationAngle = window.orientation;
+    } else if (window.screen && window.screen.orientation && typeof window.screen.orientation.angle !== 'undefined') {
+      orientationAngle = window.screen.orientation.angle;
     }
 
-    if (beta !== null && beta !== undefined) {
-      const forwardThreshold = 25;  // Tilt phone forward -> FLY UP
-      const backwardThreshold = 55; // Tilt phone backward -> FLY DOWN
+    let rawRoll = 0;  // Left/Right tilt
+    let rawPitch = 0; // Forward/Back tilt
 
-      if (beta < forwardThreshold) {
-        this.keys.up = true;
-        this.keys.down = false;
-      } else if (beta > backwardThreshold) {
-        this.keys.down = true;
-        this.keys.up = false;
-      } else {
-        this.keys.up = false;
-        this.keys.down = false;
+    if (orientationAngle === 90) {
+      // Landscape Left
+      rawRoll = rawBeta;
+      rawPitch = -rawGamma;
+    } else if (orientationAngle === -90 || orientationAngle === 270) {
+      // Landscape Right
+      rawRoll = -rawBeta;
+      rawPitch = rawGamma;
+    } else if (orientationAngle === 180) {
+      // Upside down Portrait
+      rawRoll = -rawGamma;
+      rawPitch = -rawBeta;
+    } else {
+      // Standard Portrait (0 deg)
+      rawRoll = rawGamma;
+      rawPitch = rawBeta;
+    }
+
+    // Auto-calibration zero-point offset during first 5 frames
+    if (!this.gyroCalibrated) {
+      this.gyroFrames++;
+      this.gyroBaseRoll += rawRoll;
+      this.gyroBasePitch += rawPitch;
+      if (this.gyroFrames >= 5) {
+        this.gyroBaseRoll /= 5;
+        this.gyroBasePitch /= 5;
+        this.gyroCalibrated = true;
+        console.log(`[ControlsHandler] Gyro auto-calibrated neutral zero: Roll=${this.gyroBaseRoll.toFixed(1)}, Pitch=${this.gyroBasePitch.toFixed(1)}`);
       }
+      return;
+    }
+
+    // Exponential moving average smoothing (low-pass filter) to eliminate jitter
+    const deltaRoll = rawRoll - this.gyroBaseRoll;
+    const deltaPitch = rawPitch - this.gyroBasePitch;
+
+    this.smoothedRoll = THREE.MathUtils.lerp(this.smoothedRoll, deltaRoll, 0.25);
+    this.smoothedPitch = THREE.MathUtils.lerp(this.smoothedPitch, deltaPitch, 0.25);
+
+    // Deadzone & Proportional thresholding
+    const deadzoneX = 4.5; // 4.5 degrees deadzone for Roll
+    const deadzoneY = 5.0; // 5.0 degrees deadzone for Pitch
+
+    if (this.smoothedRoll < -deadzoneX) {
+      this.keys.left = true;
+      this.keys.right = false;
+    } else if (this.smoothedRoll > deadzoneX) {
+      this.keys.right = true;
+      this.keys.left = false;
+    } else {
+      this.keys.left = false;
+      this.keys.right = false;
+    }
+
+    if (this.smoothedPitch < -deadzoneY) {
+      // Tilting phone forward -> FLY UP
+      this.keys.up = true;
+      this.keys.down = false;
+    } else if (this.smoothedPitch > deadzoneY) {
+      // Tilting phone backward -> FLY DOWN
+      this.keys.down = true;
+      this.keys.up = false;
+    } else {
+      this.keys.up = false;
+      this.keys.down = false;
     }
   }
 

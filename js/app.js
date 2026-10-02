@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v3.3.0
+   Version: v4.0.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '3.3.0';
+    this.version = '4.0.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -44,6 +44,7 @@ class GameApp {
 
     // Initial render setup & loop launch
     this.tunnel.reset();
+    this.ui.showMenuPage();
     this.animate = this.animate.bind(this);
     requestAnimationFrame(this.animate);
 
@@ -63,7 +64,7 @@ class GameApp {
     this.player.reset();
     this.tunnel.reset();
     this.controls.reset();
-    this.ui.hideAllScreens();
+    this.ui.showGamePage();
 
     this.state = 'WARMUP';
     this.player.currentSpeed = 0.01; // Ultra slow drift for eye focus
@@ -97,10 +98,6 @@ class GameApp {
     console.log(`[3D Tunnel Rush v${this.version}] Level Up! Reached Level ${newLevel} (Roller Coaster Hyper-Warp Activated)`);
     const themeName = this.tunnel.setThemeByLevel(newLevel);
     this.hud3d.showLevelUpNotice(newLevel, themeName);
-    const themeBadge = document.getElementById('themeBadge');
-    if (themeBadge) {
-      themeBadge.textContent = `L${newLevel}: ${themeName}`;
-    }
     if (this.audio && typeof this.audio.playCollectSound === 'function') {
       this.audio.playCollectSound();
     }
@@ -129,7 +126,7 @@ class GameApp {
     this.audio.stopAmbientMusic();
     this.hud3d.hideCenterBanner();
     this.hud3d.hideEnergyBoostNotice();
-    this.ui.showStartScreen();
+    this.ui.showMenuPage();
   }
 
   restartGame() {
@@ -215,11 +212,25 @@ class GameApp {
       else if (this.player.currentIncline > 0.08) speedPrefix = '▲ ';
       else if (this.player.currentIncline < -0.08) speedPrefix = '▼ ';
 
-      // Update 3D Scene HUD values
+      const speedStr = speedPrefix + (this.player.currentSpeed * 1000).toFixed(0) + ' km/h';
+      const levelStr = `L${this.player.level}: ${this.tunnel.currentTheme.name}`;
+
+      // Update Solid Block HUD (Underneath 3D Viewport)
+      this.ui.updateSolidBlockHUD(
+        this.player.score,
+        this.player.distanceTraveled,
+        speedStr,
+        this.player.shield + '%',
+        'x' + this.player.multiplier,
+        this.player.lives,
+        levelStr
+      );
+
+      // Update 3D Scene HUD values (if any 3D elements remain)
       this.hud3d.updateHUD(
         this.player.score,
         this.player.distanceTraveled,
-        speedPrefix + (this.player.currentSpeed * 1000).toFixed(0) + ' km/h',
+        speedStr,
         this.player.shield + '%',
         'x' + this.player.multiplier,
         this.player.lives,
@@ -276,7 +287,7 @@ class GameApp {
       });
 
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=3.3.0').then((reg) => {
+        navigator.serviceWorker.register('./sw.js?v=4.0.0').then((reg) => {
           console.log(`[SW v${this.version}] Registered successfully with scope:`, reg.scope);
           this.swRegistration = reg;
 

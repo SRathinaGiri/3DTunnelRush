@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v3.3.0
+   Version: v4.0.0
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -44,10 +44,11 @@ export class HUD3DEngine {
   }
 
   initHUD() {
-    // 1. Single Unified Transparent Floating HUD Banner (Flush against bottom edge of viewport)
+    // 1. In-canvas HUD Sprite hidden so the 3D Tunnel is 100% full & clear without hindrance
     this.topHudSprite = this.createCanvasSprite(500, 140);
     this.topHudSprite.scale.set(3.1, 0.868, 1);
     this.topHudSprite.position.set(0, -2.25, -3.5);
+    this.topHudSprite.visible = false;
     this.hudGroup.add(this.topHudSprite);
 
     // 2. High Score Banner (Positioned at top of viewport during menus/warmup)
