@@ -341,31 +341,9 @@ export class TunnelEngine {
   }
 
   initTunnelRings() {
-    const ringGeo = new THREE.TorusGeometry(this.tunnelRadius - 0.15, 0.2, 12, 36);
-    const ringCount = 80;
-
-    for (let i = 0; i < ringCount; i++) {
-      const zPos = 100 - i * 30;
-      const theme = this.currentTheme;
-
-      const isKeyRing = i % 3 === 0;
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: isKeyRing ? theme.pPrimary : theme.pSecondary,
-        wireframe: true,
-        transparent: true,
-        opacity: isKeyRing ? 1.0 : 0.6
-      });
-
-      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-      const center = getTunnelCenter(zPos);
-      const dir = getTunnelTangent(zPos);
-
-      ringMesh.position.set(center.x, center.y, zPos);
-      ringMesh.lookAt(center.x + dir.x, center.y + dir.y, zPos + dir.z);
-
-      this.scene.add(ringMesh);
-      this.tunnelRings.push(ringMesh);
-    }
+    // Rigid TorusGeometry meshes removed to eliminate wall-clipping crescents;
+    // glowing horizontal rings are seamlessly rendered on the curved cylinder wall texture.
+    this.tunnelRings = [];
   }
 
   initParticles() {
@@ -603,23 +581,7 @@ export class TunnelEngine {
       });
     }
 
-    // 3. Recycle & Position Torus Rings Along 3D Curve (Synchronized to scrolling wall texture)
-    const scrollOffsetZ = (this.gridTexture.offset.y / 60.0) * 2400.0;
-    const ringSpacing = 30.0;
-
-    this.tunnelRings.forEach((ring, idx) => {
-      const baseZ = playerZ + 120.0 - (idx * ringSpacing);
-      const ringZ = baseZ - (scrollOffsetZ % ringSpacing);
-
-      const center = getTunnelCenter(ringZ);
-      const dir = getTunnelTangent(ringZ);
-
-      ring.position.set(center.x, center.y, ringZ);
-      ring.lookAt(center.x + dir.x, center.y + dir.y, ringZ + dir.z);
-      ring.rotateZ(isTransitioning ? 0.015 : 0.003);
-    });
-
-    // 4. Stream Speed Particles Past Player Along Curve
+    // 3. Stream Speed Particles Past Player Along Curve
     if (this.speedLines && this.particleOffsets) {
       const particleSpeedMult = isTransitioning ? 3.5 : 1.2;
       const positions = this.speedLines.geometry.attributes.position.array;
