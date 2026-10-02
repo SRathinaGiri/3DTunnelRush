@@ -139,6 +139,78 @@ export class HUD3DEngine {
     this.renderCockpitTelemetry('40 km/h', '100%', '0m');
   }
 
+  renderCockpitTelemetry(speedStr, shieldStr, distStr) {
+    if (!this.cockpitReticleSprite) return;
+    const obj = this.cockpitReticleSprite.userData;
+    const ctx = obj.ctx;
+    ctx.clearRect(0, 0, 400, 240);
+
+    // Sleek Smaller Rectangular HUD Glass Outer Frame
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(50, 40, 300, 160, 12);
+    ctx.stroke();
+
+    // Corner HUD Brackets
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 4;
+    // Top-Left
+    ctx.beginPath(); ctx.moveTo(42, 60); ctx.lineTo(42, 32); ctx.lineTo(70, 32); ctx.stroke();
+    // Top-Right
+    ctx.beginPath(); ctx.moveTo(358, 60); ctx.lineTo(358, 32); ctx.lineTo(330, 32); ctx.stroke();
+    // Bottom-Left
+    ctx.beginPath(); ctx.moveTo(42, 180); ctx.lineTo(42, 208); ctx.lineTo(70, 208); ctx.stroke();
+    // Bottom-Right
+    ctx.beginPath(); ctx.moveTo(358, 180); ctx.lineTo(358, 208); ctx.lineTo(330, 208); ctx.stroke();
+
+    // Center Rectangular Targeting Box & Crosshair
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.75)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(165, 95, 70, 50, 6);
+    ctx.stroke();
+
+    // Tactical Crosshair Ticks
+    ctx.strokeStyle = '#ec4899';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(200, 75); ctx.lineTo(200, 90);
+    ctx.moveTo(200, 150); ctx.lineTo(200, 165);
+    ctx.moveTo(140, 120); ctx.lineTo(160, 120);
+    ctx.moveTo(240, 120); ctx.lineTo(260, 120);
+    ctx.stroke();
+
+    // =========================================================================
+    // EXACTLY 3 NUMBERS ONLY: LEFT (SPEED), CENTER (ENERGY/SHIELD), RIGHT (DISTANCE)
+    // =========================================================================
+    ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
+    ctx.shadowBlur = 6;
+
+    const cleanSpeed = (speedStr || '40 km/h').toUpperCase();
+
+    // 1. LEFT NUMBER: SPEED (e.g. 75 KM/H)
+    ctx.fillStyle = '#00f0ff';
+    ctx.font = 'bold 18px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(cleanSpeed, 62, 64);
+
+    // 2. CENTER NUMBER: ENERGY / SHIELD (e.g. 100%)
+    ctx.fillStyle = '#ec4899';
+    ctx.font = 'bold 18px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(shieldStr || '100%', 200, 64);
+
+    // 3. RIGHT NUMBER: DISTANCE (e.g. 450m)
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 18px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(distStr || '0m', 338, 64);
+
+    ctx.shadowBlur = 0;
+    obj.texture.needsUpdate = true;
+  }
+
   setCockpitVisible(visible) {
     this.isCockpitView = visible;
     if (this.cockpitGroup) {

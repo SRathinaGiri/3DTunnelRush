@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.9.2
+   Version: v4.9.3
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.9.2';
+    this.version = '4.9.3';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -334,7 +334,7 @@ class GameApp {
       });
 
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=4.9.2').then((reg) => {
+        navigator.serviceWorker.register('./sw.js?v=4.9.3').then((reg) => {
           console.log(`[SW v${this.version}] Registered successfully with scope:`, reg.scope);
           this.swRegistration = reg;
 
