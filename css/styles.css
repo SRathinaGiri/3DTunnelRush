@@ -761,7 +761,7 @@ input[type="range"]::-webkit-slider-thumb {
   gap: 8px;
 }
 
-/* Solid Block HUD (Outside 3D Viewport, zero transparency, non-intrusive) */
+/* Solid Block HUD (Outside 3D Viewport, Zero-Parallax 3D Stereo HUD Bar) */
 .solid-block-hud {
   width: 100%;
   max-width: 1000px;
@@ -769,20 +769,31 @@ input[type="range"]::-webkit-slider-thumb {
   border: 2px solid var(--cyan-glow);
   box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
   border-radius: 14px;
-  padding: 10px 16px;
+  padding: 8px 12px;
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-around;
   align-items: center;
-  gap: 10px;
   margin-top: 4px;
+}
+
+.hud-block-half {
+  flex: 1;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 4px;
+}
+
+.hud-block-half.hud-right-eye {
+  border-left: 2px solid rgba(0, 240, 255, 0.4);
+  padding-left: 6px;
 }
 
 .hud-block-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 80px;
+  min-width: 45px;
 }
 
 .hud-label {

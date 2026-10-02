@@ -25,6 +25,18 @@ export function getTunnelSlope(z) {
   return { dx, dy, pitch, yaw, incline };
 }
 
+export function getTunnelTangent(z) {
+  const delta = 1.0;
+  const pBehind = getTunnelCenter(z + delta);
+  const pAhead  = getTunnelCenter(z - delta);
+
+  return new THREE.Vector3(
+    pAhead.x - pBehind.x,
+    pAhead.y - pBehind.y,
+    -delta * 2.0
+  ).normalize();
+}
+
 export class TunnelEngine {
   constructor(scene) {
     this.scene = scene;
@@ -370,10 +382,10 @@ export class TunnelEngine {
 
       const ringMesh = new THREE.Mesh(ringGeo, ringMat);
       const center = getTunnelCenter(zPos);
-      const slope = getTunnelSlope(zPos);
+      const dir = getTunnelTangent(zPos);
 
       ringMesh.position.set(center.x, center.y, zPos);
-      ringMesh.rotation.set(-slope.pitch, -slope.yaw, 0);
+      ringMesh.lookAt(center.x + dir.x, center.y + dir.y, zPos + dir.z);
 
       this.scene.add(ringMesh);
       this.tunnelRings.push(ringMesh);
@@ -617,16 +629,16 @@ export class TunnelEngine {
 
     // 3. Recycle & Position Torus Rings Along 3D Curve
     this.tunnelRings.forEach((ring) => {
-      ring.rotation.z += isTransitioning ? 0.015 : 0.003;
       if (ring.position.z > playerZ + 50) {
         ring.position.z -= 2400;
       }
       const center = getTunnelCenter(ring.position.z);
-      const slope = getTunnelSlope(ring.position.z);
+      const dir = getTunnelTangent(ring.position.z);
+
       ring.position.x = center.x;
       ring.position.y = center.y;
-      ring.rotation.x = -slope.pitch;
-      ring.rotation.y = -slope.yaw;
+      ring.lookAt(center.x + dir.x, center.y + dir.y, ring.position.z + dir.z);
+      ring.rotateZ(isTransitioning ? 0.015 : 0.003);
     });
 
     // 4. Update Particle Lines along Curve (Accelerated particle stretch during warp!)

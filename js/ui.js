@@ -147,6 +147,16 @@ export class UIManager {
         modeBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const selectedMode = btn.dataset.mode;
+        
+        const hudRight = document.getElementById('hudBlockRight');
+        if (hudRight) {
+          if (selectedMode === 'parallel' || selectedMode === 'cross') {
+            hudRight.classList.remove('hidden');
+          } else {
+            hudRight.classList.add('hidden');
+          }
+        }
+
         this.app.renderer.setMode(selectedMode);
       };
       btn.addEventListener('click', switchMode);
@@ -270,6 +280,11 @@ export class UIManager {
   }
 
   updateSolidBlockHUD(score, distance, speedStr, shieldStr, multStr, lives, levelStr) {
+    const scoreStr = score.toString().padStart(6, '0');
+    const distStr = Math.round(distance) + 'm';
+    const livesStr = '❤️'.repeat(Math.max(0, lives));
+
+    // Left Eye / Single HUD Block
     const scoreEl = document.getElementById('hudScoreVal');
     const distEl = document.getElementById('hudDistVal');
     const speedEl = document.getElementById('hudSpeedVal');
@@ -278,12 +293,29 @@ export class UIManager {
     const livesEl = document.getElementById('hudLivesVal');
     const levelEl = document.getElementById('hudLevelVal');
 
-    if (scoreEl) scoreEl.textContent = score.toString().padStart(6, '0');
-    if (distEl) distEl.textContent = Math.round(distance) + 'm';
+    if (scoreEl) scoreEl.textContent = scoreStr;
+    if (distEl) distEl.textContent = distStr;
     if (speedEl) speedEl.textContent = speedStr;
     if (shieldEl) shieldEl.textContent = shieldStr;
     if (multEl) multEl.textContent = multStr;
-    if (livesEl) livesEl.textContent = '❤️'.repeat(Math.max(0, lives));
+    if (livesEl) livesEl.textContent = livesStr;
     if (levelEl) levelEl.textContent = levelStr;
+
+    // Right Eye HUD Block (for 0-Parallax 3D Stereo)
+    const scoreElR = document.getElementById('hudScoreValR');
+    const distElR = document.getElementById('hudDistValR');
+    const speedElR = document.getElementById('hudSpeedValR');
+    const shieldElR = document.getElementById('hudShieldValR');
+    const multElR = document.getElementById('hudMultValR');
+    const livesElR = document.getElementById('hudLivesValR');
+    const levelElR = document.getElementById('hudLevelValR');
+
+    if (scoreElR) scoreElR.textContent = scoreStr;
+    if (distElR) distElR.textContent = distStr;
+    if (speedElR) speedElR.textContent = speedStr;
+    if (shieldElR) shieldElR.textContent = shieldStr;
+    if (multElR) multElR.textContent = multStr;
+    if (livesElR) livesElR.textContent = livesStr;
+    if (levelElR) levelElR.textContent = levelStr;
   }
 }

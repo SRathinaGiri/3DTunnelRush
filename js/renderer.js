@@ -172,19 +172,38 @@ export class StereoRenderEngine {
 
   handleResize() {
     const frameElement = document.getElementById('viewportFrame');
-    let w = 500;
-    let h = 500;
+    if (!frameElement) return;
 
-    if (frameElement) {
-      const rect = frameElement.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        w = rect.width;
-        h = rect.height;
-      }
+    const isDual = (this.mode === 'parallel' || this.mode === 'cross');
+
+    // Reserved vertical height for header overlay, solid block HUD, virtual keypad & padding
+    const reservedHeight = 220;
+    const availH = Math.max(180, window.innerHeight - reservedHeight);
+    const availW = Math.max(180, window.innerWidth - 24);
+
+    let frameW = 500;
+    let frameH = 500;
+
+    if (isDual) {
+      // Dual Viewport (Parallel / Cross 3D): EXACT 2:1 Aspect Ratio (2 x Square Eye Viewports)
+      // Height constrained by availH in Landscape, Width constrained by availW in Portrait
+      let eyeH = Math.min(availH, availW / 2);
+      eyeH = Math.min(eyeH, 550); // Cap max eye height on ultra-wide screens
+      frameH = Math.round(eyeH);
+      frameW = Math.round(eyeH * 2);
+    } else {
+      // Single Viewport (2D / Anaglyph): EXACT 1:1 Aspect Ratio (Square)
+      let squareS = Math.min(availW, availH);
+      squareS = Math.min(squareS, 650); // Cap max square size
+      frameW = Math.round(squareS);
+      frameH = Math.round(squareS);
     }
+
+    frameElement.style.width = `${frameW}px`;
+    frameElement.style.height = `${frameH}px`;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.renderer.setPixelRatio(dpr);
-    this.renderer.setSize(Math.round(w), Math.round(h), false);
+    this.renderer.setSize(frameW, frameH, false);
   }
 }

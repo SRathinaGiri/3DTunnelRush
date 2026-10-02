@@ -48,7 +48,7 @@ export class HUD3DEngine {
     this.topHudSprite = this.createCanvasSprite(500, 140);
     this.topHudSprite.scale.set(3.1, 0.868, 1);
     this.topHudSprite.position.set(0, 1.85, -3.5);
-    this.topHudSprite.visible = true;
+    this.topHudSprite.visible = false;
     this.hudGroup.add(this.topHudSprite);
 
     // 2. High Score Banner (Positioned at top of viewport during menus/warmup)
