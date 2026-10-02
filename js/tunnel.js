@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DYNAMIC CURVED 3D TUNNEL & TRACK OBSTACLE ENGINE
-   Version: v4.9.6
+   Version: v4.9.7
    ========================================================================== */
 
 export function getTunnelCenter(z) {
@@ -35,6 +35,15 @@ export function getTunnelTangent(z) {
     pAhead.y - pBehind.y,
     -delta * 2.0
   ).normalize();
+}
+
+export function getTunnelCurvature(z) {
+  const delta = 10.0;
+  const sAhead  = getTunnelSlope(z - delta);
+  const sBehind = getTunnelSlope(z + delta);
+  const dYaw = Math.abs(sAhead.yaw - sBehind.yaw);
+  const dPitch = Math.abs(sAhead.pitch - sBehind.pitch);
+  return dYaw + dPitch;
 }
 
 export class TunnelEngine {
@@ -435,13 +444,13 @@ export class TunnelEngine {
       map: texture,
       side: THREE.DoubleSide,
       polygonOffset: true,
-      polygonOffsetFactor: -1.0,
-      polygonOffsetUnits: -1.0
+      polygonOffsetFactor: -2.0,
+      polygonOffsetUnits: -2.0
     });
 
     const billboardMesh = new THREE.Mesh(geo, mat);
 
-    const wallXOffset = isLeft ? -7.70 : 7.70;
+    const wallXOffset = isLeft ? -7.72 : 7.72;
     const wallYOffset = 0.0;
 
     const center = getTunnelCenter(zDistance);
@@ -459,6 +468,19 @@ export class TunnelEngine {
 
     this.scene.add(billboardMesh);
     this.wallBillboards.push(billboardMesh);
+  }
+
+  trySpawnBillboard(startZ) {
+    // Only spawn billboards on straight tunnel sections (curvature < 0.16)
+    // where the wall is flat and straight, ensuring 100% perfect rectangular posters.
+    for (let offset = 0; offset <= 120; offset += 10) {
+      const targetZ = startZ - offset;
+      if (getTunnelCurvature(targetZ) < 0.16) {
+        this.spawnBillboard(targetZ);
+        return targetZ;
+      }
+    }
+    return startZ;
   }
 
   initTunnelGeometry() {
@@ -836,7 +858,7 @@ export class TunnelEngine {
 
     while (this.nextBillboardZ > playerZ - 1200) {
       if (!isTransitioning) {
-        this.spawnBillboard(this.nextBillboardZ);
+        this.trySpawnBillboard(this.nextBillboardZ);
       }
       this.nextBillboardZ -= (180 + Math.random() * 70); // Infrequent 180m-250m interval
     }
@@ -864,7 +886,7 @@ export class TunnelEngine {
 
     this.nextBillboardZ = -180;
     while (this.nextBillboardZ > -1200) {
-      this.spawnBillboard(this.nextBillboardZ);
+      this.trySpawnBillboard(this.nextBillboardZ);
       this.nextBillboardZ -= (180 + Math.random() * 70);
     }
   }
