@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DYNAMIC CURVED 3D TUNNEL & TRACK OBSTACLE ENGINE
-   Version: v4.8.0
+   Version: v4.9.0
    ========================================================================== */
 
 export function getTunnelCenter(z) {
@@ -56,7 +56,7 @@ export class TunnelEngine {
 
     this.nextSpawnZ = -120;
     this.nextLightZ = 0;
-    this.nextBillboardZ = -120;
+    this.nextBillboardZ = -180;
 
     this.themeIndex = 0;
     this.themes = [
@@ -312,13 +312,8 @@ export class TunnelEngine {
     }
 
     const primaryColor = (theme && theme.primary) || '#00f0ff';
-    const secondaryColor = (theme && theme.secondary) || '#ec4899';
 
-    // =========================================================================
-    // SEAMLESS LEFT & RIGHT WALL MOVIE POSTERS & ILLUMINATED LED LIGHT HOOPS
-    // =========================================================================
-
-    // 1. Horizontal Glowing LED Hoop Rings across Texture (Every 128px)
+    // Horizontal Glowing LED Hoop Rings across Texture (Every 128px)
     ctx.shadowColor = primaryColor;
     ctx.shadowBlur = 10;
     ctx.strokeStyle = primaryColor;
@@ -330,65 +325,137 @@ export class TunnelEngine {
     }
     ctx.shadowBlur = 0;
 
-    // 2. Left Wall Movie Billboard (UV X = 70 to 186 -> Left Wall of Tunnel Cylinder)
-    ctx.save();
-    ctx.fillStyle = 'rgba(8, 15, 35, 0.92)';
-    ctx.shadowColor = primaryColor;
-    ctx.shadowBlur = 12;
-    ctx.strokeStyle = primaryColor;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(70, 70, 116, 120, 8);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = primaryColor;
-    ctx.font = 'bold 13px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🎬 NEON CITY', 128, 105);
-    ctx.fillText('2099', 128, 125);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '9px sans-serif';
-    ctx.fillText('IMAX 3D CINEMA', 128, 148);
-    ctx.fillStyle = secondaryColor;
-    ctx.font = 'bold 8px sans-serif';
-    ctx.fillText('★ NOW SHOWING ★', 128, 168);
-    ctx.restore();
-
-    // 3. Right Wall Arcade Billboard (UV X = 326 to 442 -> Right Wall of Tunnel Cylinder)
-    ctx.save();
-    ctx.fillStyle = 'rgba(15, 8, 30, 0.92)';
-    ctx.shadowColor = secondaryColor;
-    ctx.shadowBlur = 12;
-    ctx.strokeStyle = secondaryColor;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(326, 310, 116, 120, 8);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = secondaryColor;
-    ctx.font = 'bold 13px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🚀 TUNNEL RUSH', 384, 345);
-    ctx.fillText('WARP 3D', 384, 365);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '9px sans-serif';
-    ctx.fillText('500 KM/H HIGHWAY', 384, 388);
-    ctx.fillStyle = primaryColor;
-    ctx.font = 'bold 8px sans-serif';
-    ctx.fillText('⚡ SPEED BOOST ⚡', 384, 408);
-    ctx.restore();
-
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(6, 60);
     return texture;
+  }
+
+  createBillboardTexture(typeIndex) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+
+    const posters = [
+      {
+        bg: '#070f26',
+        border: '#00f0ff',
+        glow: '#00f0ff',
+        title1: '🎬 NEON CITY 2099',
+        title2: 'IMAX 3D CINEMA',
+        sub: '★ NOW SHOWING IN STEREOSCOPIC 3D ★',
+        accent: '#ec4899'
+      },
+      {
+        bg: '#1a0526',
+        border: '#ec4899',
+        glow: '#ec4899',
+        title1: '🚀 3D TUNNEL RUSH',
+        title2: 'WARP DRIVE HIGHWAY',
+        sub: '⚡ MAX SPEED: 500 KM/H ⚡',
+        accent: '#f59e0b'
+      },
+      {
+        bg: '#041f1a',
+        border: '#22c55e',
+        glow: '#22c55e',
+        title1: '💎 CRYSTAL CAVERNS',
+        title2: 'RESERVE DEPOSITS',
+        sub: 'COLLECT 100 GEMS FOR EXTRA LIFE',
+        accent: '#00f0ff'
+      },
+      {
+        bg: '#240905',
+        border: '#f97316',
+        glow: '#ef4444',
+        title1: '🌋 VOLCANIC WARP',
+        title2: 'MAGMA TUNNEL ZONE',
+        sub: '⚠️ DANGER: HIGH TEMPERATURE MINES ⚠️',
+        accent: '#f59e0b'
+      }
+    ];
+
+    const poster = posters[typeIndex % posters.length];
+
+    // Dark sleek Sci-Fi Frame Background
+    ctx.fillStyle = poster.bg;
+    ctx.fillRect(0, 0, 512, 256);
+
+    // Glowing Border Frame
+    ctx.shadowColor = poster.glow;
+    ctx.shadowBlur = 16;
+    ctx.strokeStyle = poster.border;
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.roundRect(12, 12, 488, 232, 16);
+    ctx.stroke();
+
+    // Inner bevel border
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(24, 24, 464, 208, 12);
+    ctx.stroke();
+
+    // Poster Title (Line 1)
+    ctx.shadowColor = poster.glow;
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = poster.border;
+    ctx.font = 'bold 36px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(poster.title1, 256, 85);
+
+    // Subtitle (Line 2)
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText(poster.title2, 256, 135);
+
+    // Bottom Badge Accent
+    ctx.fillStyle = poster.accent;
+    ctx.font = 'bold 18px monospace';
+    ctx.fillText(poster.sub, 256, 190);
+
+    ctx.shadowBlur = 0;
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    return texture;
+  }
+
+  spawnBillboard(zDistance) {
+    const isLeft = Math.random() < 0.5;
+    const typeIndex = Math.floor(Math.random() * 4);
+    const texture = this.createBillboardTexture(typeIndex);
+
+    const geo = new THREE.PlaneGeometry(5.0, 2.5); // 2:1 Landscape aspect ratio (Lengthwise poster)
+    const mat = new THREE.MeshBasicMaterial({
+      map: texture,
+      side: THREE.DoubleSide
+    });
+
+    const billboardMesh = new THREE.Mesh(geo, mat);
+
+    const wallXOffset = isLeft ? -7.65 : 7.65;
+    const wallYOffset = 0.0;
+
+    const center = getTunnelCenter(zDistance);
+    const slope = getTunnelSlope(zDistance);
+
+    billboardMesh.position.set(center.x + wallXOffset, center.y + wallYOffset, zDistance);
+
+    const sideRotY = isLeft ? Math.PI / 2 : -Math.PI / 2;
+    billboardMesh.rotation.set(-slope.pitch, -slope.yaw + sideRotY, 0);
+
+    billboardMesh.userData = {
+      zPos: zDistance,
+      isLeft: isLeft
+    };
+
+    this.scene.add(billboardMesh);
+    this.wallBillboards.push(billboardMesh);
   }
 
   initTunnelGeometry() {
@@ -730,7 +797,28 @@ export class TunnelEngine {
       }
     }
 
-    // 6. Infinite Dynamic Procedural Spawning Ahead of Player (SUPPRESSED during level warp transition!)
+    // 6. Update Wall Billboards along Dynamic Tunnel Curve
+    for (let i = this.wallBillboards.length - 1; i >= 0; i--) {
+      const b = this.wallBillboards[i];
+      const zPos = b.userData.zPos;
+      const isLeft = b.userData.isLeft;
+      const center = getTunnelCenter(zPos);
+      const slope = getTunnelSlope(zPos);
+
+      const wallXOffset = isLeft ? -7.65 : 7.65;
+      const sideRotY = isLeft ? Math.PI / 2 : -Math.PI / 2;
+
+      b.position.x = center.x + wallXOffset;
+      b.position.y = center.y;
+      b.rotation.set(-slope.pitch, -slope.yaw + sideRotY, 0);
+
+      if (b.position.z > playerZ + 30) {
+        this.scene.remove(b);
+        this.wallBillboards.splice(i, 1);
+      }
+    }
+
+    // 7. Infinite Dynamic Procedural Spawning Ahead of Player (SUPPRESSED during level warp transition!)
     while (this.nextSpawnZ > playerZ - 1200) {
       if (!isTransitioning) {
         if (Math.random() > 0.30) {
@@ -742,13 +830,23 @@ export class TunnelEngine {
       }
       this.nextSpawnZ -= 38;
     }
+
+    while (this.nextBillboardZ > playerZ - 1200) {
+      if (!isTransitioning) {
+        this.spawnBillboard(this.nextBillboardZ);
+      }
+      this.nextBillboardZ -= (180 + Math.random() * 70); // Infrequent 180m-250m interval
+    }
   }
 
   reset() {
     this.obstacles.forEach(obs => this.scene.remove(obs));
     this.gems.forEach(gem => this.scene.remove(gem));
+    this.wallBillboards.forEach(b => this.scene.remove(b));
+
     this.obstacles = [];
     this.gems = [];
+    this.wallBillboards = [];
 
     this.nextSpawnZ = -120;
     while (this.nextSpawnZ > -1200) {
@@ -759,6 +857,12 @@ export class TunnelEngine {
         this.spawnGem(this.nextSpawnZ - 18);
       }
       this.nextSpawnZ -= 38;
+    }
+
+    this.nextBillboardZ = -180;
+    while (this.nextBillboardZ > -1200) {
+      this.spawnBillboard(this.nextBillboardZ);
+      this.nextBillboardZ -= (180 + Math.random() * 70);
     }
   }
 }

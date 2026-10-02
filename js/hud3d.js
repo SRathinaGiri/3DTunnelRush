@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v4.8.0
+   Version: v4.9.0
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -85,34 +85,34 @@ export class HUD3DEngine {
     const pillarMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
 
     // Left Pillar
-    const leftPillarGeo = new THREE.CylinderGeometry(0.06, 0.12, 3.8, 6);
+    const leftPillarGeo = new THREE.CylinderGeometry(0.04, 0.08, 1.8, 6);
     const leftPillar = new THREE.Mesh(leftPillarGeo, pillarMat);
-    leftPillar.position.set(-2.0, 0.2, -1.8);
+    leftPillar.position.set(-1.05, 0.1, -0.65);
     leftPillar.rotation.z = -0.35;
     leftPillar.rotation.y = 0.2;
     this.cockpitGroup.add(leftPillar);
 
     // Right Pillar
     const rightPillar = new THREE.Mesh(leftPillarGeo, pillarMat);
-    rightPillar.position.set(2.0, 0.2, -1.8);
+    rightPillar.position.set(1.05, 0.1, -0.65);
     rightPillar.rotation.z = 0.35;
     rightPillar.rotation.y = -0.2;
     this.cockpitGroup.add(rightPillar);
 
     // Bottom Dashboard Frame Arc
-    const dashGeo = new THREE.BoxGeometry(4.4, 0.35, 0.5);
+    const dashGeo = new THREE.BoxGeometry(2.2, 0.15, 0.2);
     const dashMesh = new THREE.Mesh(dashGeo, pillarMat);
-    dashMesh.position.set(0, -1.25, -1.8);
+    dashMesh.position.set(0, -0.58, -0.65);
     this.cockpitGroup.add(dashMesh);
 
     // Top Canopy Frame Bar
-    const topBarGeo = new THREE.BoxGeometry(3.6, 0.15, 0.3);
+    const topBarGeo = new THREE.BoxGeometry(1.8, 0.08, 0.15);
     const topBarMesh = new THREE.Mesh(topBarGeo, pillarMat);
-    topBarMesh.position.set(0, 1.45, -1.8);
+    topBarMesh.position.set(0, 0.62, -0.65);
     this.cockpitGroup.add(topBarMesh);
 
-    // 2. Cockpit Glass Aura Rim (Glows Red on mine hit, Green on crystal collect, Cyan on warp)
-    const auraRimGeo = new THREE.RingGeometry(1.6, 2.0, 32);
+    // 2. Cockpit Glass Aura Rim (Glows Red on mine hit, Green on crystal collect, Cyan on warp at 0-parallax)
+    const auraRimGeo = new THREE.RingGeometry(0.62, 0.80, 32);
     this.cockpitAuraMat = new THREE.MeshBasicMaterial({
       color: 0x00f0ff,
       side: THREE.DoubleSide,
@@ -122,29 +122,74 @@ export class HUD3DEngine {
       depthWrite: false
     });
     this.cockpitAuraMesh = new THREE.Mesh(auraRimGeo, this.cockpitAuraMat);
-    this.cockpitAuraMesh.position.set(0, 0, -1.75);
+    this.cockpitAuraMesh.position.set(0, 0, -0.64);
     this.cockpitGroup.add(this.cockpitAuraMesh);
 
-    // 3. Central HUD Targeting Reticle & Glass Crosshair
-    const reticleSprite = this.createCanvasSprite(200, 200);
-    reticleSprite.scale.set(0.6, 0.6, 1);
-    reticleSprite.position.set(0, -0.1, -1.70);
+    // 3. Central Rectangular 0-Parallax HUD Glass Reticle Frame
+    const reticleSprite = this.createCanvasSprite(360, 240);
+    reticleSprite.scale.set(0.85, 0.567, 1);
+    reticleSprite.position.set(0, -0.02, -0.63);
 
     const ctx = reticleSprite.userData.ctx;
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.65)';
+    ctx.clearRect(0, 0, 360, 240);
+
+    // Rectangular Glass HUD Outer Frame
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.75)';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(100, 100, 60, 0, Math.PI * 2);
+    ctx.roundRect(10, 10, 340, 220, 12);
     ctx.stroke();
+
+    // Corner HUD Brackets
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 4;
+    // Top-Left
+    ctx.beginPath(); ctx.moveTo(6, 35); ctx.lineTo(6, 6); ctx.lineTo(35, 6); ctx.stroke();
+    // Top-Right
+    ctx.beginPath(); ctx.moveTo(354, 35); ctx.lineTo(354, 6); ctx.lineTo(325, 6); ctx.stroke();
+    // Bottom-Left
+    ctx.beginPath(); ctx.moveTo(6, 205); ctx.lineTo(6, 234); ctx.lineTo(35, 234); ctx.stroke();
+    // Bottom-Right
+    ctx.beginPath(); ctx.moveTo(354, 205); ctx.lineTo(354, 234); ctx.lineTo(325, 234); ctx.stroke();
+
+    // Center Rectangular Targeting Box & Crosshair
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(100, 100, 20, 0, Math.PI * 2);
+    ctx.roundRect(145, 95, 70, 50, 6);
     ctx.stroke();
+
+    // Tactical Crosshair Ticks
+    ctx.strokeStyle = '#ec4899';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(100, 20); ctx.lineTo(100, 40);
-    ctx.moveTo(100, 160); ctx.lineTo(100, 180);
-    ctx.moveTo(20, 100); ctx.lineTo(40, 100);
-    ctx.moveTo(160, 100); ctx.lineTo(180, 100);
+    // Top tick
+    ctx.moveTo(180, 75); ctx.lineTo(180, 90);
+    // Bottom tick
+    ctx.moveTo(180, 150); ctx.lineTo(180, 165);
+    // Left tick
+    ctx.moveTo(120, 120); ctx.lineTo(140, 120);
+    // Right tick
+    ctx.moveTo(220, 120); ctx.lineTo(240, 120);
     ctx.stroke();
+
+    // High-Tech Cockpit HUD Telemetry Labels
+    ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
+    ctx.shadowBlur = 4;
+    ctx.fillStyle = '#00f0ff';
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('SYS: OK | 0-PARALLAX', 22, 28);
+
+    ctx.textAlign = 'right';
+    ctx.fillText('PILOT COCKPIT', 338, 28);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.fillText('▼ FLIGHT VECTOR ▼', 180, 222);
+
+    ctx.shadowBlur = 0;
     reticleSprite.userData.texture.needsUpdate = true;
 
     this.cockpitGroup.add(reticleSprite);
