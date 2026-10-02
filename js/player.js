@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY PLAYER SHIP WITH VISUAL AURAS & LIVES SYSTEM
-   Version: v3.3.0
+   Version: v4.2.0
    ========================================================================== */
 
 import { getTunnelCenter, getTunnelSlope } from './tunnel.js';
