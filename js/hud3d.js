@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v4.9.0
+   Version: v4.9.5
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -81,8 +81,8 @@ export class HUD3DEngine {
     this.cockpitGroup = new THREE.Group();
     this.hudGroup.add(this.cockpitGroup);
 
-    // 1. Cockpit Glass Aura Rim (Glows Red on mine hit, Green on crystal collect at Z = -1.45)
-    const auraRimGeo = new THREE.RingGeometry(1.2, 1.6, 32);
+    // 1. Cockpit Glass Aura Rim (Glows Red on mine hit, Green on crystal collect at Z = -0.46)
+    const auraRimGeo = new THREE.RingGeometry(0.42, 0.56, 32);
     this.cockpitAuraMat = new THREE.MeshBasicMaterial({
       color: 0x00f0ff,
       side: THREE.DoubleSide,
@@ -92,13 +92,13 @@ export class HUD3DEngine {
       depthWrite: false
     });
     this.cockpitAuraMesh = new THREE.Mesh(auraRimGeo, this.cockpitAuraMat);
-    this.cockpitAuraMesh.position.set(0, 0, -1.45);
+    this.cockpitAuraMesh.position.set(0, 0, -0.46);
     this.cockpitGroup.add(this.cockpitAuraMesh);
 
-    // 2. Rectangular Cockpit HUD Glass Reticle Frame positioned near screen plane (Z = -1.40)
+    // 2. Rectangular Cockpit HUD Glass Reticle Frame positioned near screen plane (Z = -0.45)
     this.cockpitReticleSprite = this.createCanvasSprite(400, 240);
-    this.cockpitReticleSprite.scale.set(1.8, 1.08, 1);
-    this.cockpitReticleSprite.position.set(0, -0.05, -1.40);
+    this.cockpitReticleSprite.scale.set(0.52, 0.325, 1);
+    this.cockpitReticleSprite.position.set(0, -0.02, -0.45);
     this.cockpitGroup.add(this.cockpitReticleSprite);
 
     this.cockpitAuraTimer = 0;
@@ -115,24 +115,24 @@ export class HUD3DEngine {
     const ctx = obj.ctx;
     ctx.clearRect(0, 0, 400, 240);
 
-    // Sleek Larger Rectangular HUD Glass Outer Frame
+    // Sleek Rectangular HUD Glass Outer Frame
     ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.roundRect(25, 20, 350, 200, 14);
+    ctx.roundRect(30, 25, 340, 190, 14);
     ctx.stroke();
 
     // Corner HUD Brackets
     ctx.strokeStyle = '#00f0ff';
     ctx.lineWidth = 4;
     // Top-Left
-    ctx.beginPath(); ctx.moveTo(15, 45); ctx.lineTo(15, 12); ctx.lineTo(45, 12); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(20, 48); ctx.lineTo(20, 15); ctx.lineTo(50, 15); ctx.stroke();
     // Top-Right
-    ctx.beginPath(); ctx.moveTo(385, 45); ctx.lineTo(385, 12); ctx.lineTo(355, 12); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(380, 48); ctx.lineTo(380, 15); ctx.lineTo(350, 15); ctx.stroke();
     // Bottom-Left
-    ctx.beginPath(); ctx.moveTo(15, 195); ctx.lineTo(15, 228); ctx.lineTo(45, 228); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(20, 192); ctx.lineTo(20, 225); ctx.lineTo(50, 225); ctx.stroke();
     // Bottom-Right
-    ctx.beginPath(); ctx.moveTo(385, 195); ctx.lineTo(385, 228); ctx.lineTo(355, 228); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(380, 192); ctx.lineTo(380, 225); ctx.lineTo(350, 225); ctx.stroke();
 
     // Center Rectangular Targeting Box & Crosshair
     ctx.strokeStyle = 'rgba(0, 240, 255, 0.75)';
@@ -161,21 +161,21 @@ export class HUD3DEngine {
 
     // 1. LEFT NUMBER: SPEED (e.g. 75 KM/H)
     ctx.fillStyle = '#00f0ff';
-    ctx.font = 'bold 20px monospace';
+    ctx.font = 'bold 22px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText(cleanSpeed, 40, 46);
+    ctx.fillText(cleanSpeed, 45, 52);
 
     // 2. CENTER NUMBER: ENERGY / SHIELD (e.g. 100%)
     ctx.fillStyle = '#ec4899';
-    ctx.font = 'bold 20px monospace';
+    ctx.font = 'bold 22px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(shieldStr || '100%', 200, 46);
+    ctx.fillText(shieldStr || '100%', 200, 52);
 
     // 3. RIGHT NUMBER: DISTANCE (e.g. 450m)
     ctx.fillStyle = '#f59e0b';
-    ctx.font = 'bold 20px monospace';
+    ctx.font = 'bold 22px monospace';
     ctx.textAlign = 'right';
-    ctx.fillText(distStr || '0m', 360, 46);
+    ctx.fillText(distStr || '0m', 355, 52);
 
     ctx.shadowBlur = 0;
     obj.texture.needsUpdate = true;

@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DYNAMIC CURVED 3D TUNNEL & TRACK OBSTACLE ENGINE
-   Version: v4.9.0
+   Version: v4.9.5
    ========================================================================== */
 
 export function getTunnelCenter(z) {
@@ -430,15 +430,18 @@ export class TunnelEngine {
     const typeIndex = Math.floor(Math.random() * 4);
     const texture = this.createBillboardTexture(typeIndex);
 
-    const geo = new THREE.PlaneGeometry(12.0, 6.0); // Epic 12x6 Massive Landscape Billboard Frame
+    const geo = new THREE.PlaneGeometry(6.5, 3.25); // Proportional 6.5x3.25 Landscape Wall Poster Frame
     const mat = new THREE.MeshBasicMaterial({
       map: texture,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: -1.0,
+      polygonOffsetUnits: -1.0
     });
 
     const billboardMesh = new THREE.Mesh(geo, mat);
 
-    const wallXOffset = isLeft ? -7.35 : 7.35;
+    const wallXOffset = isLeft ? -7.70 : 7.70;
     const wallYOffset = 0.0;
 
     const center = getTunnelCenter(zDistance);
@@ -805,7 +808,7 @@ export class TunnelEngine {
       const center = getTunnelCenter(zPos);
       const slope = getTunnelSlope(zPos);
 
-      const wallXOffset = isLeft ? -7.65 : 7.65;
+      const wallXOffset = isLeft ? -7.70 : 7.70;
       const sideRotY = isLeft ? Math.PI / 2 : -Math.PI / 2;
 
       b.position.x = center.x + wallXOffset;
