@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY PLAYER SHIP WITH VISUAL AURAS & LIVES SYSTEM
-   Version: v4.3.1
+   Version: v4.4.0
    ========================================================================== */
 
 import { getTunnelCenter, getTunnelSlope } from './tunnel.js';
@@ -190,12 +190,10 @@ export class PlayerShip {
     const slope = getTunnelSlope(this.z);
     this.currentIncline = slope.incline;
 
-    // Gravity Physics effect:
-    // Climbing UP (incline > 0): Gravity slows ship down
-    // Descending DOWN (incline < 0): Gravity accelerates ship forward!
-    const gravityMultiplier = 1.0 - slope.incline * 0.70;
+    // Gentle incline pitch feedback (subtle speed sensation without steep drop!)
+    const gravityMultiplier = 1.0 - slope.incline * 0.12;
 
-    // Calculate level progression bonus on top of user's chosen speed setting
+    // Calculate level progression bonus (speed starts at ~50 km/h and accelerates over distance & levels)
     const newLevel = 1 + Math.floor(this.distanceTraveled / 1000);
     if (newLevel !== this.level) {
       this.level = newLevel;
@@ -205,16 +203,16 @@ export class PlayerShip {
       }
     }
 
-    const levelBonus = (this.level - 1) * 0.015;
-    const distanceBonus = Math.floor(this.distanceTraveled / 250) * 0.002;
+    const levelBonus = (this.level - 1) * 0.012;
+    const distanceBonus = (this.distanceTraveled / 1000) * 0.005;
     const baseSetting = this.baseSpeed + levelBonus + distanceBonus;
 
     // Roller Coaster Hyper-Warp Speed Surge Multiplier during level transition
-    const warpMultiplier = this.isLevelTransitioning ? 2.5 : 1.0;
+    const warpMultiplier = this.isLevelTransitioning ? 2.2 : 1.0;
 
     const nominalSpeed = baseSetting * gravityMultiplier * warpMultiplier;
-    const targetSpeed = Math.max(0.02, nominalSpeed);
-    this.currentSpeed = THREE.MathUtils.lerp(this.currentSpeed, targetSpeed, 0.15);
+    const targetSpeed = Math.max(0.04, nominalSpeed);
+    this.currentSpeed = THREE.MathUtils.lerp(this.currentSpeed, targetSpeed, 0.10);
 
     // 6. Flight Movement Along Curved Tunnel Trajectory (-Z)
     this.z -= this.currentSpeed;

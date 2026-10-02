@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DYNAMIC CURVED 3D TUNNEL & TRACK OBSTACLE ENGINE
-   Version: v4.3.1
+   Version: v4.4.0
    ========================================================================== */
 
 export function getTunnelCenter(z) {
@@ -347,34 +347,27 @@ export class TunnelEngine {
   }
 
   initParticles() {
-    const particleCount = 400;
+    const particleCount = 300;
     const particleGeo = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
     this.particleOffsets = new Float32Array(particleCount * 3);
 
     for (let i = 0; i < particleCount * 3; i += 3) {
       const angle = Math.random() * Math.PI * 2;
-      const rad = Math.random() * (this.tunnelRadius - 0.8);
-      const ox = Math.cos(angle) * rad;
-      const oy = Math.sin(angle) * rad;
-      const z = 200 - Math.random() * this.totalLength;
-
-      this.particleOffsets[i] = ox;
-      this.particleOffsets[i + 1] = oy;
-
-      const center = getTunnelCenter(z);
-      positions[i] = ox + center.x;
-      positions[i + 1] = oy + center.y;
-      positions[i + 2] = z;
+      const rad = Math.random() * (this.tunnelRadius - 1.0);
+      this.particleOffsets[i] = Math.cos(angle) * rad;
+      this.particleOffsets[i + 1] = Math.sin(angle) * rad;
+      // Local Z offset relative to player: from -220 (ahead) to +20 (behind camera)
+      this.particleOffsets[i + 2] = 20 - Math.random() * 240;
     }
 
     particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
     const particleMat = new THREE.PointsMaterial({
       color: 0x00f0ff,
-      size: 0.25,
+      size: 0.28,
       transparent: true,
-      opacity: 0.9
+      opacity: 0.85
     });
 
     this.speedLines = new THREE.Points(particleGeo, particleMat);
@@ -581,21 +574,27 @@ export class TunnelEngine {
       });
     }
 
-    // 3. Stream Speed Particles Past Player Along Curve
+    // 3. Stream Speed Particles Past Player Along Curve (Continuous infinite particle warp)
     if (this.speedLines && this.particleOffsets) {
-      const particleSpeedMult = isTransitioning ? 3.5 : 1.2;
+      const particleSpeedMult = isTransitioning ? 3.0 : 1.2;
       const positions = this.speedLines.geometry.attributes.position.array;
-      for (let i = 0; i < positions.length; i += 3) {
-        let localZ = positions[i + 2] - speed * 350.0 * particleSpeedMult;
-        if (localZ < -1800.0) {
-          localZ += 1850.0;
-        }
-        positions[i + 2] = localZ;
 
+      for (let i = 0; i < this.particleOffsets.length; i += 3) {
+        // Scroll particle Z relative to player (stream past camera towards +Z)
+        this.particleOffsets[i + 2] += speed * 60.0 * particleSpeedMult;
+
+        // When particle streams behind camera (localZ > 20), recycle ahead to -220
+        if (this.particleOffsets[i + 2] > 20.0) {
+          this.particleOffsets[i + 2] -= 240.0;
+        }
+
+        const localZ = this.particleOffsets[i + 2];
         const worldZ = playerZ + localZ;
         const center = getTunnelCenter(worldZ);
-        positions[i] = this.particleOffsets[i] + center.x;
-        positions[i + 1] = this.particleOffsets[i + 1] + center.y;
+
+        positions[i] = center.x + this.particleOffsets[i];
+        positions[i + 1] = center.y + this.particleOffsets[i + 1];
+        positions[i + 2] = worldZ;
       }
       this.speedLines.geometry.attributes.position.needsUpdate = true;
     }
