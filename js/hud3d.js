@@ -81,38 +81,38 @@ export class HUD3DEngine {
     this.cockpitGroup = new THREE.Group();
     this.hudGroup.add(this.cockpitGroup);
 
-    // 1. Dark Metallic Titanium Windshield Pillars (Left & Right)
+    // 1. Dark Metallic Titanium Windshield Pillars (Left & Right) positioned at Z = -14.0 (True 0-Parallax Focal Plane)
     const pillarMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
 
     // Left Pillar
-    const leftPillarGeo = new THREE.CylinderGeometry(0.04, 0.08, 1.8, 6);
+    const leftPillarGeo = new THREE.CylinderGeometry(0.12, 0.24, 14.0, 6);
     const leftPillar = new THREE.Mesh(leftPillarGeo, pillarMat);
-    leftPillar.position.set(-1.05, 0.1, -0.65);
+    leftPillar.position.set(-6.8, 0.5, -14.0);
     leftPillar.rotation.z = -0.35;
     leftPillar.rotation.y = 0.2;
     this.cockpitGroup.add(leftPillar);
 
     // Right Pillar
     const rightPillar = new THREE.Mesh(leftPillarGeo, pillarMat);
-    rightPillar.position.set(1.05, 0.1, -0.65);
+    rightPillar.position.set(6.8, 0.5, -14.0);
     rightPillar.rotation.z = 0.35;
     rightPillar.rotation.y = -0.2;
     this.cockpitGroup.add(rightPillar);
 
     // Bottom Dashboard Frame Arc
-    const dashGeo = new THREE.BoxGeometry(2.2, 0.15, 0.2);
+    const dashGeo = new THREE.BoxGeometry(14.0, 1.2, 1.0);
     const dashMesh = new THREE.Mesh(dashGeo, pillarMat);
-    dashMesh.position.set(0, -0.58, -0.65);
+    dashMesh.position.set(0, -4.5, -14.0);
     this.cockpitGroup.add(dashMesh);
 
     // Top Canopy Frame Bar
-    const topBarGeo = new THREE.BoxGeometry(1.8, 0.08, 0.15);
+    const topBarGeo = new THREE.BoxGeometry(12.0, 0.8, 0.8);
     const topBarMesh = new THREE.Mesh(topBarGeo, pillarMat);
-    topBarMesh.position.set(0, 0.62, -0.65);
+    topBarMesh.position.set(0, 4.8, -14.0);
     this.cockpitGroup.add(topBarMesh);
 
-    // 2. Cockpit Glass Aura Rim (Glows Red on mine hit, Green on crystal collect, Cyan on warp at 0-parallax)
-    const auraRimGeo = new THREE.RingGeometry(0.62, 0.80, 32);
+    // 2. Cockpit Glass Aura Rim (Glows Red on mine hit, Green on crystal collect at Z = -13.9)
+    const auraRimGeo = new THREE.RingGeometry(4.2, 5.6, 32);
     this.cockpitAuraMat = new THREE.MeshBasicMaterial({
       color: 0x00f0ff,
       side: THREE.DoubleSide,
@@ -122,22 +122,22 @@ export class HUD3DEngine {
       depthWrite: false
     });
     this.cockpitAuraMesh = new THREE.Mesh(auraRimGeo, this.cockpitAuraMat);
-    this.cockpitAuraMesh.position.set(0, 0, -0.64);
+    this.cockpitAuraMesh.position.set(0, 0, -13.9);
     this.cockpitGroup.add(this.cockpitAuraMesh);
 
-    // 3. Central Rectangular 0-Parallax HUD Glass Reticle Frame
-    const reticleSprite = this.createCanvasSprite(360, 240);
-    reticleSprite.scale.set(0.85, 0.567, 1);
-    reticleSprite.position.set(0, -0.02, -0.63);
+    // 3. Smaller Rectangular 0-Parallax Cockpit Reticle Frame Sprite at Z = -14.0
+    this.cockpitReticleSprite = this.createCanvasSprite(400, 240);
+    this.cockpitReticleSprite.scale.set(7.5, 4.5, 1);
+    this.cockpitReticleSprite.position.set(0, 0, -14.0);
+    this.cockpitGroup.add(this.cockpitReticleSprite);
 
-    const ctx = reticleSprite.userData.ctx;
-    ctx.clearRect(0, 0, 360, 240);
+    this.cockpitAuraTimer = 0;
+    this.cockpitAuraMaxDuration = 1.0;
+    this.isCockpitView = false;
+    this.cockpitGroup.visible = false;
 
-    // Rectangular Glass HUD Outer Frame
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.75)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(10, 10, 340, 220, 12);
+    this.renderCockpitTelemetry('40 km/h', '100%', '0m');
+  }
     ctx.stroke();
 
     // Corner HUD Brackets
@@ -200,8 +200,14 @@ export class HUD3DEngine {
   }
 
   setCockpitVisible(visible) {
+    this.isCockpitView = visible;
     if (this.cockpitGroup) {
       this.cockpitGroup.visible = visible;
+    }
+    if (this.topHudSprite) {
+      // In Cockpit View, hide top HUD bar completely to free up space!
+      // In Chase View, show top HUD bar as normal.
+      this.topHudSprite.visible = !visible;
     }
   }
 
@@ -242,7 +248,7 @@ export class HUD3DEngine {
 
   updateHUD(score, dist, speedStr, shieldStr, multStr, lives, gemsForExtraLife) {
     const roundedDist = Math.round(dist || 0);
-    const hudKey = `${score}_${roundedDist}_${speedStr}_${shieldStr}_${multStr}_${lives}_${gemsForExtraLife}`;
+    const hudKey = `${score}_${roundedDist}_${speedStr}_${shieldStr}_${multStr}_${lives}_${gemsForExtraLife}_${this.isCockpitView}`;
     if (this.lastHudKey === hudKey) return;
     this.lastHudKey = hudKey;
 
@@ -253,7 +259,16 @@ export class HUD3DEngine {
     this.currentMultStr = multStr;
     this.currentLives = lives !== undefined ? lives : 3;
     this.currentGemsForExtraLife = gemsForExtraLife || 0;
-    this.renderTopHud();
+
+    const distStr = roundedDist + 'm';
+    this.renderCockpitTelemetry(this.currentSpeedStr, this.currentShieldStr, distStr);
+
+    if (this.isCockpitView) {
+      if (this.topHudSprite) this.topHudSprite.visible = false;
+    } else {
+      if (this.topHudSprite) this.topHudSprite.visible = true;
+      this.renderTopHud();
+    }
   }
 
   renderTopHud() {
