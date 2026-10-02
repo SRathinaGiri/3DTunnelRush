@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v4.9.5
+   Version: v4.9.6
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -81,8 +81,8 @@ export class HUD3DEngine {
     this.cockpitGroup = new THREE.Group();
     this.hudGroup.add(this.cockpitGroup);
 
-    // 1. Cockpit Glass Aura Rim (Glows Red on mine hit, Green on crystal collect at Z = -0.46)
-    const auraRimGeo = new THREE.RingGeometry(0.42, 0.56, 32);
+    // 1. Cockpit Glass Aura Rim (Glows Red on mine hit, Green on crystal collect at Z = -0.51)
+    const auraRimGeo = new THREE.RingGeometry(0.44, 0.58, 32);
     this.cockpitAuraMat = new THREE.MeshBasicMaterial({
       color: 0x00f0ff,
       side: THREE.DoubleSide,
@@ -92,13 +92,13 @@ export class HUD3DEngine {
       depthWrite: false
     });
     this.cockpitAuraMesh = new THREE.Mesh(auraRimGeo, this.cockpitAuraMat);
-    this.cockpitAuraMesh.position.set(0, 0, -0.46);
+    this.cockpitAuraMesh.position.set(0, 0, -0.51);
     this.cockpitGroup.add(this.cockpitAuraMesh);
 
-    // 2. Rectangular Cockpit HUD Glass Reticle Frame positioned near screen plane (Z = -0.45)
+    // 2. Rectangular Cockpit HUD Glass Reticle Frame positioned near screen plane (Z = -0.50)
     this.cockpitReticleSprite = this.createCanvasSprite(400, 240);
-    this.cockpitReticleSprite.scale.set(0.52, 0.325, 1);
-    this.cockpitReticleSprite.position.set(0, -0.02, -0.45);
+    this.cockpitReticleSprite.scale.set(0.55, 0.33, 1);
+    this.cockpitReticleSprite.position.set(0, -0.02, -0.50);
     this.cockpitGroup.add(this.cockpitReticleSprite);
 
     this.cockpitAuraTimer = 0;
@@ -187,9 +187,9 @@ export class HUD3DEngine {
       this.cockpitGroup.visible = visible;
     }
     if (this.topHudSprite) {
-      // In Cockpit View, hide top HUD bar completely to free up space!
-      // In Chase View, show top HUD bar as normal.
-      this.topHudSprite.visible = !visible;
+      // Per user explicit requirement: For Chase view, we don't require HUD inside viewport!
+      // In both Chase View and Cockpit View, keep 3D topHudSprite hidden.
+      this.topHudSprite.visible = false;
     }
   }
 
@@ -202,8 +202,10 @@ export class HUD3DEngine {
   }
 
   updateCameraTransform(camera, delta = 0.016) {
-    this.hudGroup.position.copy(camera.position);
-    this.hudGroup.quaternion.copy(camera.quaternion);
+    // Always anchor HUD transform to mainCamera to maintain crossed front-of-screen stereo parallax
+    const targetCam = (window.app && window.app.renderer && window.app.renderer.mainCamera) ? window.app.renderer.mainCamera : camera;
+    this.hudGroup.position.copy(targetCam.position);
+    this.hudGroup.quaternion.copy(targetCam.quaternion);
 
     if (this.cockpitAuraTimer > 0) {
       this.cockpitAuraTimer -= delta;
@@ -245,12 +247,8 @@ export class HUD3DEngine {
     const distStr = roundedDist + 'm';
     this.renderCockpitTelemetry(this.currentSpeedStr, this.currentShieldStr, distStr);
 
-    if (this.isCockpitView) {
-      if (this.topHudSprite) this.topHudSprite.visible = false;
-    } else {
-      if (this.topHudSprite) this.topHudSprite.visible = true;
-      this.renderTopHud();
-    }
+    // Keep 3D floating top HUD hidden per user directive for clean viewport in Chase View
+    if (this.topHudSprite) this.topHudSprite.visible = false;
   }
 
   renderTopHud() {

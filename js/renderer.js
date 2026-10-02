@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - STEREOSCOPIC 3D RENDER ENGINE (STEREO.JS ARCHITECTURE)
-   Version: v4.9.0
+   Version: v4.9.6
    ========================================================================== */
 
 export class StereoRenderEngine {
@@ -123,8 +123,13 @@ export class StereoRenderEngine {
     const leftCam = this.swapEyes ? this.cameraR : this.cameraL;
     const rightCam = this.swapEyes ? this.cameraL : this.cameraR;
 
+    // Always update 3D HUD transform relative to mainCamera so stereoscopic eye views
+    // calculate natural crossed/zero-parallax disparity in front of the screen.
+    if (window.app && window.app.hud3d) {
+      window.app.hud3d.updateCameraTransform(this.mainCamera);
+    }
+
     if (this.mode === '2d') {
-      if (window.app && window.app.hud3d) window.app.hud3d.updateCameraTransform(this.mainCamera);
       this.renderer.setViewport(0, 0, width, height);
       this.renderer.setScissor(0, 0, width, height);
       this.renderer.render(scene, this.mainCamera);
@@ -133,38 +138,30 @@ export class StereoRenderEngine {
       const leftX = (this.mode === 'parallel') ? 0 : halfWidth;
       const rightX = (this.mode === 'parallel') ? halfWidth : 0;
 
-      // Left Eye Viewport (HUD zero parallax aligned to screen plane)
-      if (window.app && window.app.hud3d) window.app.hud3d.updateCameraTransform(leftCam);
+      // Left Eye Viewport
       this.renderer.setViewport(leftX, 0, halfWidth, height);
       this.renderer.setScissor(leftX, 0, halfWidth, height);
       this.renderer.render(scene, leftCam);
 
-      // Right Eye Viewport (HUD zero parallax aligned to screen plane)
-      if (window.app && window.app.hud3d) window.app.hud3d.updateCameraTransform(rightCam);
+      // Right Eye Viewport
       this.renderer.setViewport(rightX, 0, halfWidth, height);
       this.renderer.setScissor(rightX, 0, halfWidth, height);
       this.renderer.render(scene, rightCam);
-
-      // Restore main camera transform for HUD tracking
-      if (window.app && window.app.hud3d) window.app.hud3d.updateCameraTransform(this.mainCamera);
     } else if (this.mode === 'anaglyph') {
       this.renderer.setViewport(0, 0, width, height);
       this.renderer.setScissor(0, 0, width, height);
       this.renderer.clear();
 
-      // Left Eye -> Red Channel (Zero Parallax HUD)
-      if (window.app && window.app.hud3d) window.app.hud3d.updateCameraTransform(leftCam);
+      // Left Eye -> Red Channel
       this.renderer.colorMask(true, false, false, true);
       this.renderer.render(scene, leftCam);
 
-      // Right Eye -> Cyan Channel (Zero Parallax HUD)
-      if (window.app && window.app.hud3d) window.app.hud3d.updateCameraTransform(rightCam);
+      // Right Eye -> Cyan Channel
       this.renderer.clearDepth();
       this.renderer.colorMask(false, true, true, true);
       this.renderer.render(scene, rightCam);
 
       this.renderer.colorMask(true, true, true, true);
-      if (window.app && window.app.hud3d) window.app.hud3d.updateCameraTransform(this.mainCamera);
     }
 
     this.renderer.setScissorTest(false);
