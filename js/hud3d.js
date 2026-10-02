@@ -81,38 +81,8 @@ export class HUD3DEngine {
     this.cockpitGroup = new THREE.Group();
     this.hudGroup.add(this.cockpitGroup);
 
-    // 1. Dark Metallic Titanium Windshield Pillars (Left & Right) positioned at Z = -14.0 (True 0-Parallax Focal Plane)
-    const pillarMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
-
-    // Left Pillar
-    const leftPillarGeo = new THREE.CylinderGeometry(0.12, 0.24, 14.0, 6);
-    const leftPillar = new THREE.Mesh(leftPillarGeo, pillarMat);
-    leftPillar.position.set(-6.8, 0.5, -14.0);
-    leftPillar.rotation.z = -0.35;
-    leftPillar.rotation.y = 0.2;
-    this.cockpitGroup.add(leftPillar);
-
-    // Right Pillar
-    const rightPillar = new THREE.Mesh(leftPillarGeo, pillarMat);
-    rightPillar.position.set(6.8, 0.5, -14.0);
-    rightPillar.rotation.z = 0.35;
-    rightPillar.rotation.y = -0.2;
-    this.cockpitGroup.add(rightPillar);
-
-    // Bottom Dashboard Frame Arc
-    const dashGeo = new THREE.BoxGeometry(14.0, 1.2, 1.0);
-    const dashMesh = new THREE.Mesh(dashGeo, pillarMat);
-    dashMesh.position.set(0, -4.5, -14.0);
-    this.cockpitGroup.add(dashMesh);
-
-    // Top Canopy Frame Bar
-    const topBarGeo = new THREE.BoxGeometry(12.0, 0.8, 0.8);
-    const topBarMesh = new THREE.Mesh(topBarGeo, pillarMat);
-    topBarMesh.position.set(0, 4.8, -14.0);
-    this.cockpitGroup.add(topBarMesh);
-
-    // 2. Cockpit Glass Aura Rim (Glows Red on mine hit, Green on crystal collect at Z = -13.9)
-    const auraRimGeo = new THREE.RingGeometry(4.2, 5.6, 32);
+    // 1. Cockpit Glass Aura Rim (Glows Red on mine hit, Green on crystal collect at Z = -1.45)
+    const auraRimGeo = new THREE.RingGeometry(1.2, 1.6, 32);
     this.cockpitAuraMat = new THREE.MeshBasicMaterial({
       color: 0x00f0ff,
       side: THREE.DoubleSide,
@@ -122,13 +92,13 @@ export class HUD3DEngine {
       depthWrite: false
     });
     this.cockpitAuraMesh = new THREE.Mesh(auraRimGeo, this.cockpitAuraMat);
-    this.cockpitAuraMesh.position.set(0, 0, -13.9);
+    this.cockpitAuraMesh.position.set(0, 0, -1.45);
     this.cockpitGroup.add(this.cockpitAuraMesh);
 
-    // 3. Smaller Rectangular 0-Parallax Cockpit Reticle Frame Sprite at Z = -14.0
+    // 2. Rectangular Cockpit HUD Glass Reticle Frame positioned near screen plane (Z = -1.40)
     this.cockpitReticleSprite = this.createCanvasSprite(400, 240);
-    this.cockpitReticleSprite.scale.set(7.5, 4.5, 1);
-    this.cockpitReticleSprite.position.set(0, 0, -14.0);
+    this.cockpitReticleSprite.scale.set(1.8, 1.08, 1);
+    this.cockpitReticleSprite.position.set(0, -0.05, -1.40);
     this.cockpitGroup.add(this.cockpitReticleSprite);
 
     this.cockpitAuraTimer = 0;
@@ -145,24 +115,24 @@ export class HUD3DEngine {
     const ctx = obj.ctx;
     ctx.clearRect(0, 0, 400, 240);
 
-    // Sleek Smaller Rectangular HUD Glass Outer Frame
+    // Sleek Larger Rectangular HUD Glass Outer Frame
     ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.roundRect(50, 40, 300, 160, 12);
+    ctx.roundRect(25, 20, 350, 200, 14);
     ctx.stroke();
 
     // Corner HUD Brackets
     ctx.strokeStyle = '#00f0ff';
     ctx.lineWidth = 4;
     // Top-Left
-    ctx.beginPath(); ctx.moveTo(42, 60); ctx.lineTo(42, 32); ctx.lineTo(70, 32); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(15, 45); ctx.lineTo(15, 12); ctx.lineTo(45, 12); ctx.stroke();
     // Top-Right
-    ctx.beginPath(); ctx.moveTo(358, 60); ctx.lineTo(358, 32); ctx.lineTo(330, 32); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(385, 45); ctx.lineTo(385, 12); ctx.lineTo(355, 12); ctx.stroke();
     // Bottom-Left
-    ctx.beginPath(); ctx.moveTo(42, 180); ctx.lineTo(42, 208); ctx.lineTo(70, 208); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(15, 195); ctx.lineTo(15, 228); ctx.lineTo(45, 228); ctx.stroke();
     // Bottom-Right
-    ctx.beginPath(); ctx.moveTo(358, 180); ctx.lineTo(358, 208); ctx.lineTo(330, 208); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(385, 195); ctx.lineTo(385, 228); ctx.lineTo(355, 228); ctx.stroke();
 
     // Center Rectangular Targeting Box & Crosshair
     ctx.strokeStyle = 'rgba(0, 240, 255, 0.75)';
@@ -191,21 +161,21 @@ export class HUD3DEngine {
 
     // 1. LEFT NUMBER: SPEED (e.g. 75 KM/H)
     ctx.fillStyle = '#00f0ff';
-    ctx.font = 'bold 18px monospace';
+    ctx.font = 'bold 20px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText(cleanSpeed, 62, 64);
+    ctx.fillText(cleanSpeed, 40, 46);
 
     // 2. CENTER NUMBER: ENERGY / SHIELD (e.g. 100%)
     ctx.fillStyle = '#ec4899';
-    ctx.font = 'bold 18px monospace';
+    ctx.font = 'bold 20px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(shieldStr || '100%', 200, 64);
+    ctx.fillText(shieldStr || '100%', 200, 46);
 
     // 3. RIGHT NUMBER: DISTANCE (e.g. 450m)
     ctx.fillStyle = '#f59e0b';
-    ctx.font = 'bold 18px monospace';
+    ctx.font = 'bold 20px monospace';
     ctx.textAlign = 'right';
-    ctx.fillText(distStr || '0m', 338, 64);
+    ctx.fillText(distStr || '0m', 360, 46);
 
     ctx.shadowBlur = 0;
     obj.texture.needsUpdate = true;
