@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DYNAMIC CURVED 3D TUNNEL & TRACK OBSTACLE ENGINE
-   Version: v4.7.1
+   Version: v4.8.0
    ========================================================================== */
 
 export function getTunnelCenter(z) {
@@ -311,130 +311,84 @@ export class TunnelEngine {
       }
     }
 
+    const primaryColor = (theme && theme.primary) || '#00f0ff';
+    const secondaryColor = (theme && theme.secondary) || '#ec4899';
+
+    // =========================================================================
+    // SEAMLESS LEFT & RIGHT WALL MOVIE POSTERS & ILLUMINATED LED LIGHT HOOPS
+    // =========================================================================
+
+    // 1. Horizontal Glowing LED Hoop Rings across Texture (Every 128px)
+    ctx.shadowColor = primaryColor;
+    ctx.shadowBlur = 10;
+    ctx.strokeStyle = primaryColor;
+    ctx.lineWidth = 6;
+    for (let j = 0; j <= 512; j += 128) {
+      ctx.beginPath();
+      ctx.moveTo(0, j); ctx.lineTo(512, j);
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+
+    // 2. Left Wall Movie Billboard (UV X = 70 to 186 -> Left Wall of Tunnel Cylinder)
+    ctx.save();
+    ctx.fillStyle = 'rgba(8, 15, 35, 0.92)';
+    ctx.shadowColor = primaryColor;
+    ctx.shadowBlur = 12;
+    ctx.strokeStyle = primaryColor;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(70, 70, 116, 120, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = primaryColor;
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🎬 NEON CITY', 128, 105);
+    ctx.fillText('2099', 128, 125);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '9px sans-serif';
+    ctx.fillText('IMAX 3D CINEMA', 128, 148);
+    ctx.fillStyle = secondaryColor;
+    ctx.font = 'bold 8px sans-serif';
+    ctx.fillText('★ NOW SHOWING ★', 128, 168);
+    ctx.restore();
+
+    // 3. Right Wall Arcade Billboard (UV X = 326 to 442 -> Right Wall of Tunnel Cylinder)
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 8, 30, 0.92)';
+    ctx.shadowColor = secondaryColor;
+    ctx.shadowBlur = 12;
+    ctx.strokeStyle = secondaryColor;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(326, 310, 116, 120, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = secondaryColor;
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🚀 TUNNEL RUSH', 384, 345);
+    ctx.fillText('WARP 3D', 384, 365);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '9px sans-serif';
+    ctx.fillText('500 KM/H HIGHWAY', 384, 388);
+    ctx.fillStyle = primaryColor;
+    ctx.font = 'bold 8px sans-serif';
+    ctx.fillText('⚡ SPEED BOOST ⚡', 384, 408);
+    ctx.restore();
+
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(6, 60);
     return texture;
-  }
-
-  createBillboardTextures() {
-    this.billboardTextures = [];
-    const postersData = [
-      { title: '🎬 NEON CITY 2099', sub: 'NOW SHOWING IN STEREOSCOPIC 3D', tag: 'IMAX 3D CINEMA', color: '#00f0ff', bg: '#08152b' },
-      { title: '🚀 3D TUNNEL RUSH', sub: 'EXPERIENCE WARP SPEED HIGHWAY', tag: 'MAX SPEED 500 KM/H', color: '#ec4899', bg: '#240b33' },
-      { title: '⚡ CYBER WARP 2099', sub: 'HIGHWAY ILLUMINATED SYSTEM', tag: 'HYPER DRIVE ACTIVATED', color: '#f59e0b', bg: '#1c1917' },
-      { title: '💎 EMERALD CRYSTALS', sub: 'ENERGY BOOST POWER-UP CORE', tag: 'COLLECT 100 FOR EXTRA LIFE', color: '#10b981', bg: '#062016' }
-    ];
-
-    postersData.forEach(p => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 320;
-      const ctx = canvas.getContext('2d');
-
-      ctx.fillStyle = p.bg;
-      ctx.fillRect(0, 0, 512, 320);
-
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 8;
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = 16;
-      ctx.strokeRect(10, 10, 492, 300);
-
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = p.color;
-      ctx.font = 'bold 32px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(p.title, 256, 90);
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '20px sans-serif';
-      ctx.fillText(p.sub, 256, 170);
-
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 16px sans-serif';
-      ctx.fillText(`[ ${p.tag} ]`, 256, 240);
-
-      const texture = new THREE.CanvasTexture(canvas);
-      this.billboardTextures.push(texture);
-    });
-  }
-
-  spawnWallBillboard(zDistance) {
-    if (!this.billboardTextures || this.billboardTextures.length === 0) {
-      this.createBillboardTextures();
-    }
-
-    const texIdx = Math.floor(Math.random() * this.billboardTextures.length);
-    const texture = this.billboardTextures[texIdx];
-
-    const billboardGroup = new THREE.Group();
-
-    // 3D Plane Mesh for Billboard Poster (Mounted on Left or Right Wall only)
-    const geo = new THREE.PlaneGeometry(5.2, 3.2);
-    const mat = new THREE.MeshBasicMaterial({
-      map: texture,
-      side: THREE.DoubleSide
-    });
-    const mesh = new THREE.Mesh(geo, mat);
-    billboardGroup.add(mesh);
-
-    // Pick random wall side: Left wall (+Math.PI/2) or Right wall (-Math.PI/2)
-    const isLeft = Math.random() > 0.5;
-    const wallAngle = isLeft ? (Math.PI / 2 - 0.3) : (-Math.PI / 2 + 0.3);
-
-    const wallR = 7.75;
-    const wallX = Math.cos(wallAngle) * wallR;
-    const wallY = Math.sin(wallAngle) * wallR;
-
-    const center = getTunnelCenter(zDistance);
-    const slope = getTunnelSlope(zDistance);
-
-    billboardGroup.position.set(center.x + wallX, center.y + wallY, zDistance);
-    billboardGroup.rotation.set(-slope.pitch, -slope.yaw + (isLeft ? Math.PI / 2 : -Math.PI / 2), 0);
-
-    billboardGroup.userData = {
-      zPos: zDistance,
-      wallAngle: wallAngle,
-      wallR: wallR
-    };
-
-    this.scene.add(billboardGroup);
-    this.wallBillboards.push(billboardGroup);
-  }
-
-  spawn300mLightFixture(zDistance) {
-    const fixtureGroup = new THREE.Group();
-
-    // 1. Dark Metallic Wall Ring Mounting Bracket
-    const mountGeo = new THREE.TorusGeometry(7.95, 0.14, 12, 36);
-    const mountMat = new THREE.MeshBasicMaterial({ color: 0x1e293b });
-    const mountMesh = new THREE.Mesh(mountGeo, mountMat);
-    fixtureGroup.add(mountMesh);
-
-    // 2. Glowing Neon LED Illumination Ring (Every 300m!)
-    const ledGeo = new THREE.TorusGeometry(7.90, 0.09, 12, 36);
-    const theme = this.currentTheme;
-    const ledMat = new THREE.MeshBasicMaterial({
-      color: theme ? theme.pPrimary : 0x00f0ff
-    });
-    const ledMesh = new THREE.Mesh(ledGeo, ledMat);
-    ledMesh.name = 'ledRing';
-    fixtureGroup.add(ledMesh);
-
-    const center = getTunnelCenter(zDistance);
-    const slope = getTunnelSlope(zDistance);
-
-    fixtureGroup.position.set(center.x, center.y, zDistance);
-    fixtureGroup.rotation.set(-slope.pitch, -slope.yaw, 0);
-
-    fixtureGroup.userData = {
-      zPos: zDistance
-    };
-
-    this.scene.add(fixtureGroup);
-    this.lightFixtures.push(fixtureGroup);
   }
 
   initTunnelGeometry() {
@@ -458,11 +412,10 @@ export class TunnelEngine {
 
     this.gridTexture = this.createGridTexture(theme);
 
+    // 100% Solid & Opaque Tunnel Wall (Zero transparency, zero distant obstacle clutter!)
     const wallMat = new THREE.MeshBasicMaterial({
       map: this.gridTexture,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.20
+      side: THREE.DoubleSide
     });
 
     this.tunnelWallMesh = new THREE.Mesh(wallGeo, wallMat);
@@ -733,63 +686,7 @@ export class TunnelEngine {
       this.speedLines.geometry.attributes.position.needsUpdate = true;
     }
 
-    // 1. Dynamic 300m LED Light Fixtures & Proximity Illumination Pools
-    let minFixtureDist = 9999;
-    for (let i = 0; i < this.lightFixtures.length; i++) {
-      const fix = this.lightFixtures[i];
-      const dist = Math.abs(fix.position.z - playerZ);
-      if (dist < minFixtureDist) minFixtureDist = dist;
-    }
-
-    // Tunnel wall pool of light: Bright near 300m fixtures, atmospheric dark between them!
-    if (this.tunnelWallMesh && this.tunnelWallMesh.material) {
-      if (minFixtureDist < 80.0) {
-        // Light pool surrounding 300m LED ring fixture
-        const poolFactor = 0.20 + Math.pow(1.0 - (minFixtureDist / 80.0), 1.6) * 0.80;
-        this.tunnelWallMesh.material.opacity = poolFactor;
-      } else {
-        // Atmospheric dark tunnel stretches
-        this.tunnelWallMesh.material.opacity = 0.20;
-      }
-    }
-
-    // 2. Update Wall Billboards along curve & recycle
-    for (let i = this.wallBillboards.length - 1; i >= 0; i--) {
-      const bb = this.wallBillboards[i];
-      const zPos = bb.userData.zPos;
-      const center = getTunnelCenter(zPos);
-      const slope = getTunnelSlope(zPos);
-      const wallAngle = bb.userData.wallAngle;
-      const wallR = bb.userData.wallR;
-
-      bb.position.x = center.x + Math.cos(wallAngle) * wallR;
-      bb.position.y = center.y + Math.sin(wallAngle) * wallR;
-      bb.rotation.set(-slope.pitch, -slope.yaw + (wallAngle > 0 ? Math.PI / 2 : -Math.PI / 2), 0);
-
-      if (bb.position.z > playerZ + 30) {
-        this.scene.remove(bb);
-        this.wallBillboards.splice(i, 1);
-      }
-    }
-
-    // 3. Update 300m LED Light Fixtures along curve & recycle
-    for (let i = this.lightFixtures.length - 1; i >= 0; i--) {
-      const fix = this.lightFixtures[i];
-      const zPos = fix.userData.zPos;
-      const center = getTunnelCenter(zPos);
-      const slope = getTunnelSlope(zPos);
-
-      fix.position.x = center.x;
-      fix.position.y = center.y;
-      fix.rotation.set(-slope.pitch, -slope.yaw, 0);
-
-      if (fix.position.z > playerZ + 30) {
-        this.scene.remove(fix);
-        this.lightFixtures.splice(i, 1);
-      }
-    }
-
-    // 5. Update Obstacles along Curve & Rotate Mines
+    // 4. Update Obstacles along Curve & Rotate Mines
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obs = this.obstacles[i];
       obs.rotation.z += 0.02;
@@ -811,7 +708,7 @@ export class TunnelEngine {
       }
     }
 
-    // 6. Update Gems along Curve & Rotate Halo Rings
+    // 5. Update Gems along Curve & Rotate Halo Rings
     for (let i = this.gems.length - 1; i >= 0; i--) {
       const gem = this.gems[i];
       gem.rotation.y += 0.04;
@@ -833,19 +730,7 @@ export class TunnelEngine {
       }
     }
 
-    // 7. Infinite Dynamic Spawning Ahead of Player (300m Light Fixtures, Billboards & Obstacles)
-    while (this.nextLightZ > playerZ - 1200) {
-      this.spawn300mLightFixture(this.nextLightZ);
-      this.nextLightZ -= 300;
-    }
-
-    while (this.nextBillboardZ > playerZ - 1200) {
-      if (!isTransitioning) {
-        this.spawnWallBillboard(this.nextBillboardZ);
-      }
-      this.nextBillboardZ -= (120 + Math.random() * 60);
-    }
-
+    // 6. Infinite Dynamic Procedural Spawning Ahead of Player (SUPPRESSED during level warp transition!)
     while (this.nextSpawnZ > playerZ - 1200) {
       if (!isTransitioning) {
         if (Math.random() > 0.30) {
@@ -862,27 +747,10 @@ export class TunnelEngine {
   reset() {
     this.obstacles.forEach(obs => this.scene.remove(obs));
     this.gems.forEach(gem => this.scene.remove(gem));
-    this.wallBillboards.forEach(bb => this.scene.remove(bb));
-    this.lightFixtures.forEach(fix => this.scene.remove(fix));
     this.obstacles = [];
     this.gems = [];
-    this.wallBillboards = [];
-    this.lightFixtures = [];
 
     this.nextSpawnZ = -120;
-    this.nextLightZ = 0;
-    this.nextBillboardZ = -120;
-
-    while (this.nextLightZ > -1200) {
-      this.spawn300mLightFixture(this.nextLightZ);
-      this.nextLightZ -= 300;
-    }
-
-    while (this.nextBillboardZ > -1200) {
-      this.spawnWallBillboard(this.nextBillboardZ);
-      this.nextBillboardZ -= (120 + Math.random() * 60);
-    }
-
     while (this.nextSpawnZ > -1200) {
       if (Math.random() > 0.30) {
         this.spawnObstacle(this.nextSpawnZ);
