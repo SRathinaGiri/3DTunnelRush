@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="3D Tunnel Rush PWA game with 2D, Parallel, Cross-eye, and Anaglyph 3D viewing modes.">
+  <meta name="theme-color" content="#00f0ff">
+  
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
+  <title>3D Tunnel Rush PWA - v3.2.0</title>
+
+  <!-- PWA Manifest & Favicon -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link rel="apple-touch-icon" href="./assets/favicon.svg">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="./css/styles.css?v=3.2.0">
+
+  <!-- Three.js Engine (Local Self-Contained PWA Dependency) -->
+  <script src="./js/lib/three.min.js"></script>
+</head>
+<body>
+
+  <!-- App Header & Version Confirmation -->
+  <header class="app-header">
+    <div class="brand-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="10" stroke="#00f0ff"/>
+        <path d="M12 6v12M6 12h12" stroke="#ec4899"/>
+      </svg>
+      <span>3D Tunnel Rush</span>
+      <span class="version-badge" id="appVersionBadge">v3.2.0</span>
+    </div>
+
+    <div class="header-controls">
+      <button class="icon-btn active" id="headerStartBtn" title="Start Game">▶️ Start</button>
+      <button class="icon-btn" id="headerPauseBtn" title="Pause / Resume Game">⏸️ Pause</button>
+      <button class="icon-btn" id="headerStopBtn" title="Stop Game">⏹️ Stop</button>
+      <button class="icon-btn" id="headerRestartBtn" title="Restart Game">🔄 Restart</button>
+      <button class="icon-btn" id="resetHighScoreBtn" title="Reset High Score">🗑️ Reset High</button>
+      <button class="icon-btn" id="audioToggle" title="Toggle Audio">🔊 Sound</button>
+      <button class="icon-btn" id="gyroToggle" title="Toggle Mobile Gyroscope Steering">📱 <span id="gyroBadge">Gyro: OFF</span></button>
+      <button class="icon-btn" id="themeToggle" title="Change Theme">🎨 <span id="themeBadge">Cyberpunk</span></button>
+      <button class="icon-btn" id="helpBtn" title="3D Instructions">❓ Guide</button>
+    </div>
+  </header>
+
+  <!-- Main Game Layout -->
+  <main class="game-layout">
+
+    <!-- VIEWPORT CONTAINER FRAME:
+         Single Viewport (2D / Anaglyph): 500px x 500px
+         Dual Viewport (Parallel / Cross): 1000px x 500px -->
+    <div class="viewport-frame mode-single" id="viewportFrame">
+      
+      <!-- Middle divider line for Side-by-Side 3D views -->
+      <div class="sbs-divider" id="sbsDivider"></div>
+
+      <!-- Main WebGL 3D Canvas -->
+      <canvas id="gameCanvas"></canvas>
+
+
+
+      <!-- 5-SECOND EYE FOCUS COUNTDOWN BANNER -->
+      <div class="focus-banner hidden" id="focusBanner" style="display: none;">
+        <div class="focus-title">👁️ ALIGN YOUR EYES FOR 3D 👁️</div>
+        <div class="focus-countdown" id="focusCountdownVal">5</div>
+        <div class="focus-sub">Warm-up mode: Game starting in 5 seconds...</div>
+      </div>
+
+      <!-- START MENU MODAL OVERLAY -->
+      <div class="modal-overlay" id="startScreen">
+        <div class="modal-card">
+          <h1 class="modal-title">3D Tunnel Rush</h1>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Relax your eyes and enjoy the 3D stereoscopic depth! Dodge red space mines and collect emerald crystals.
+          </p>
+          <div style="background: rgba(0, 240, 255, 0.08); padding: 14px; border-radius: 12px; border: 1px solid rgba(0, 240, 255, 0.25); text-align: left; font-size: 0.85rem; width: 100%;">
+            <strong style="color: var(--cyan-glow);">Full 4-Way Flight Controls:</strong>
+            <ul style="margin-left: 18px; margin-top: 6px; line-height: 1.6;">
+              <li><strong>Arrow Keys / W A S D (or Touch Pad)</strong>: Fly Left, Right, Up & Down</li>
+              <li><strong>Dynamic 3D Curves & Gravity</strong>: Uphill slows down, downhill plunges fast!</li>
+              <li><strong>Emerald Crystals</strong>: Collect green crystals for 5s 2X Double Score & Speed Boost!</li>
+              <li><strong>Red Space Mines</strong>: Avoid dangerous spiked red laser mines!</li>
+            </ul>
+          </div>
+          <button class="action-btn" id="startBtn">🚀 Start Game</button>
+        </div>
+      </div>
+
+      <!-- PAUSE MODAL OVERLAY -->
+      <div class="modal-overlay hidden" id="pauseScreen">
+        <div class="modal-card">
+          <h2 class="modal-title">PAUSED</h2>
+          <p style="color: var(--text-muted);">Adjust your 3D eye parameters below or press resume.</p>
+          <button class="action-btn" id="resumeBtn">▶️ Resume</button>
+        </div>
+      </div>
+
+      <!-- GAME OVER MODAL OVERLAY -->
+      <div class="modal-overlay hidden" id="gameOverScreen">
+        <div class="modal-card">
+          <h2 class="modal-title" style="background: linear-gradient(135deg, #ff0077, var(--pink-glow)); -webkit-background-clip: text;">GAME OVER</h2>
+          <div style="font-size: 1.1rem; color: var(--text-main);">
+            Final Score: <strong id="finalScore" style="color: var(--cyan-glow);">0</strong>
+          </div>
+          <div style="font-size: 0.9rem; color: var(--text-muted);">
+            Distance: <span id="finalDistance">0m</span>
+          </div>
+          <button class="action-btn" id="restartBtn">🔄 Play Again</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3D STEREO CONTROL TOOLBAR (Eye distance, focal distance & viewing mode) -->
+    <section class="controls-toolbar">
+      
+      <!-- Mode Selection Buttons -->
+      <div class="mode-selector">
+        <button class="mode-btn active" data-mode="2d">2D</button>
+        <button class="mode-btn" data-mode="parallel">Parallel (SBS)</button>
+        <button class="mode-btn" data-mode="cross">Cross-Eye (SBS)</button>
+        <button class="mode-btn" data-mode="anaglyph">Anaglyph (3D)</button>
+      </div>
+
+      <!-- Parameter Sliders -->
+      <div class="params-panel">
+        <div class="slider-group" title="Adjust distance between left & right cameras (3D Depth IPD = 1.500)">
+          <label for="eyeDistSlider">Eye Dist (IPD):</label>
+          <input type="range" id="eyeDistSlider" min="0.000" max="5.000" step="0.050" value="1.500">
+          <span class="val" id="eyeDistVal">1.500</span>
+        </div>
+
+        <div class="slider-group" title="Adjust focal convergence point in 3D space">
+          <label for="focalSlider">Focal Plane:</label>
+          <input type="range" id="focalSlider" min="5.0" max="60.0" step="1.0" value="14.0">
+          <span class="val" id="focalVal">14.0</span>
+        </div>
+
+        <div class="slider-group" title="Adjust Game Speed">
+          <label for="speedSlider">Game Speed:</label>
+          <input type="range" id="speedSlider" min="0.02" max="0.30" step="0.01" value="0.06">
+          <span class="val" id="speedSettingVal">0.06</span>
+        </div>
+
+        <button class="icon-btn" id="swapEyesBtn" title="Swap Left and Right eyes">🔄 Swap Eyes</button>
+      </div>
+
+    </section>
+
+    <!-- MOBILE TOUCH VIRTUAL KEYPAD (4-Button Steering & Altitude Controls) -->
+    <div class="virtual-keypad-2btn" id="virtualKeypad">
+      <button class="vk-btn-large" id="vkLeft">◄ LEFT</button>
+      <button class="vk-btn-large" id="vkUp">▲ UP</button>
+      <button class="vk-btn-large" id="vkDown">▼ DOWN</button>
+      <button class="vk-btn-large" id="vkRight">RIGHT ►</button>
+    </div>
+
+  </main>
+
+  <!-- 3D VIEWING GUIDE MODAL DRAWER -->
+  <div class="info-drawer hidden" id="infoDrawer" style="display: none;">
+    <h3>Stereoscopic 3D Viewing Guide (v3.2.0)</h3>
+    <p>This game supports 4 distinct rendering modes designed for maximum 3D immersion:</p>
+    <ul>
+      <li><strong>2D View</strong>: Standard single camera view (500x500 viewport).</li>
+      <li><strong>Parallel 3D (Side-by-Side)</strong>: Left eye image on left, right eye image on right (1000x500 viewport). Use a VR viewer, cardboard headset, or relax your eyes straight ahead until the images overlap.</li>
+      <li><strong>Cross-Eye 3D (Side-by-Side)</strong>: Right eye image on left, left eye image on right (1000x500 viewport). Cross your eyes slightly until a middle 3D image appears in focus!</li>
+      <li><strong>Anaglyph 3D</strong>: Rendered in Red-Cyan colors (500x500 viewport). Wear standard Red/Blue 3D glasses!</li>
+      <li><strong>Eye Distance (IPD) Slider</strong>: Adjust camera separation for stronger or softer 3D depth effect.</li>
+    </ul>
+    <button class="close-drawer-btn" id="closeInfoBtn">Got It!</button>
+  </div>
+
+  <!-- FLOATING PWA INTERNET UPDATE BANNER -->
+  <div id="updateBanner" class="update-banner hidden">
+    <div class="update-content">
+      <span class="update-text">🚀 New software update <strong id="updateVersionTag">v3.2.0</strong> is ready!</span>
+      <button id="installUpdateBtn" class="update-btn">🔄 Install Update</button>
+    </div>
+  </div>
+
+  <!-- Entry Script (ES Modules) -->
+  <script type="module" src="./js/app.js?v=3.2.0"></script>
+</body>
+</html>

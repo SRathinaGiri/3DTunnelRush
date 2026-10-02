@@ -1,0 +1,19 @@
+{
+  "name": "3D Tunnel Rush PWA",
+  "short_name": "TunnelRush3D",
+  "description": "3D Neon Tunnel Rush game with 2D, Parallel, Cross-eye, and Anaglyph 3D viewing modes.",
+  "version": "3.2.0",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#020617",
+  "theme_color": "#00f0ff",
+  "icons": [
+    {
+      "src": "./assets/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
