@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - STEREOSCOPIC 3D RENDER ENGINE (STEREO.JS ARCHITECTURE)
-   Version: v4.9.7
+   Version: v4.9.8
    ========================================================================== */
 
 export class StereoRenderEngine {

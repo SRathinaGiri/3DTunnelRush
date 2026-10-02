@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v4.9.7
+   Version: v4.9.8
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -95,100 +95,34 @@ export class HUD3DEngine {
     this.cockpitAuraMesh.position.set(0, 0, -2.52);
     this.cockpitGroup.add(this.cockpitAuraMesh);
 
-    // 2. Rectangular Cockpit HUD Glass Reticle Frame positioned safely inside camera view frustum (Z = -2.50)
+    // 2. Reticle overlay permanently removed once for all per user directive
     this.cockpitReticleSprite = this.createCanvasSprite(400, 240);
-    this.cockpitReticleSprite.scale.set(2.4, 1.44, 1);
-    this.cockpitReticleSprite.position.set(0, -0.05, -2.50);
+    this.cockpitReticleSprite.visible = false;
     this.cockpitGroup.add(this.cockpitReticleSprite);
 
     this.cockpitAuraTimer = 0;
     this.cockpitAuraMaxDuration = 1.0;
     this.isCockpitView = false;
     this.cockpitGroup.visible = false;
-
-    this.renderCockpitTelemetry('40 km/h', '100%', '0m');
   }
 
   renderCockpitTelemetry(speedStr, shieldStr, distStr) {
-    if (!this.cockpitReticleSprite) return;
-    const obj = this.cockpitReticleSprite.userData;
-    const ctx = obj.ctx;
-    ctx.clearRect(0, 0, 400, 240);
-
-    // Sleek Rectangular HUD Glass Outer Frame
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(30, 25, 340, 190, 14);
-    ctx.stroke();
-
-    // Corner HUD Brackets
-    ctx.strokeStyle = '#00f0ff';
-    ctx.lineWidth = 4;
-    // Top-Left
-    ctx.beginPath(); ctx.moveTo(20, 48); ctx.lineTo(20, 15); ctx.lineTo(50, 15); ctx.stroke();
-    // Top-Right
-    ctx.beginPath(); ctx.moveTo(380, 48); ctx.lineTo(380, 15); ctx.lineTo(350, 15); ctx.stroke();
-    // Bottom-Left
-    ctx.beginPath(); ctx.moveTo(20, 192); ctx.lineTo(20, 225); ctx.lineTo(50, 225); ctx.stroke();
-    // Bottom-Right
-    ctx.beginPath(); ctx.moveTo(380, 192); ctx.lineTo(380, 225); ctx.lineTo(350, 225); ctx.stroke();
-
-    // Center Rectangular Targeting Box & Crosshair
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.75)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(165, 95, 70, 50, 6);
-    ctx.stroke();
-
-    // Tactical Crosshair Ticks
-    ctx.strokeStyle = '#ec4899';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(200, 75); ctx.lineTo(200, 90);
-    ctx.moveTo(200, 150); ctx.lineTo(200, 165);
-    ctx.moveTo(140, 120); ctx.lineTo(160, 120);
-    ctx.moveTo(240, 120); ctx.lineTo(260, 120);
-    ctx.stroke();
-
-    // =========================================================================
-    // EXACTLY 3 NUMBERS ONLY: LEFT (SPEED), CENTER (ENERGY/SHIELD), RIGHT (DISTANCE)
-    // =========================================================================
-    ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
-    ctx.shadowBlur = 6;
-
-    const cleanSpeed = (speedStr || '40 km/h').toUpperCase();
-
-    // 1. LEFT NUMBER: SPEED (e.g. 75 KM/H)
-    ctx.fillStyle = '#00f0ff';
-    ctx.font = 'bold 22px monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText(cleanSpeed, 45, 52);
-
-    // 2. CENTER NUMBER: ENERGY / SHIELD (e.g. 100%)
-    ctx.fillStyle = '#ec4899';
-    ctx.font = 'bold 22px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(shieldStr || '100%', 200, 52);
-
-    // 3. RIGHT NUMBER: DISTANCE (e.g. 450m)
-    ctx.fillStyle = '#f59e0b';
-    ctx.font = 'bold 22px monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText(distStr || '0m', 355, 52);
-
-    ctx.shadowBlur = 0;
-    obj.texture.needsUpdate = true;
+    // Reticle frame & telemetry canvas drawing removed permanently per user request
+    if (this.cockpitReticleSprite) {
+      this.cockpitReticleSprite.visible = false;
+    }
   }
 
   setCockpitVisible(visible) {
     this.isCockpitView = visible;
     if (this.cockpitGroup) {
+      // Reticle hidden permanently; cockpitGroup visible only during hit/collect aura flashes
       this.cockpitGroup.visible = visible;
     }
+    if (this.cockpitReticleSprite) {
+      this.cockpitReticleSprite.visible = false;
+    }
     if (this.topHudSprite) {
-      // Per user explicit requirement: For Chase view, we don't require HUD inside viewport!
-      // In both Chase View and Cockpit View, keep 3D topHudSprite hidden.
       this.topHudSprite.visible = false;
     }
   }

@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DYNAMIC CURVED 3D TUNNEL & TRACK OBSTACLE ENGINE
-   Version: v4.9.7
+   Version: v4.9.8
    ========================================================================== */
 
 export function getTunnelCenter(z) {
@@ -434,6 +434,43 @@ export class TunnelEngine {
     return texture;
   }
 
+  alignBillboardToTunnel(billboardMesh, zDistance, isLeft) {
+    const center = getTunnelCenter(zDistance);
+    const pBehind = getTunnelCenter(zDistance + 1.0);
+    const pAhead  = getTunnelCenter(zDistance - 1.0);
+
+    // 1. Local Forward Tangent Vector down tunnel trajectory
+    const forward = new THREE.Vector3(
+      pAhead.x - pBehind.x,
+      pAhead.y - pBehind.y,
+      -2.0
+    ).normalize();
+
+    // 2. Local Up Vector (orthogonalized to forward vector)
+    let up = new THREE.Vector3(0, 1, 0);
+    up.sub(forward.clone().multiplyScalar(up.dot(forward))).normalize();
+
+    // 3. Local Right Vector (cross product of forward and up)
+    const right = new THREE.Vector3().crossVectors(forward, up).normalize();
+
+    // 4. Position poster 7.82 units out along local Right vector on Left or Right wall
+    const wallSide = isLeft ? -1.0 : 1.0;
+    const wallPos = new THREE.Vector3(center.x, center.y, zDistance)
+      .add(right.clone().multiplyScalar(wallSide * 7.82));
+
+    billboardMesh.position.copy(wallPos);
+
+    // 5. Basis Matrix Orientation:
+    // Poster X-axis = forward vector (along tunnel length)
+    // Poster Y-axis = up vector (along wall height)
+    // Poster Z-axis = normal vector pointing into tunnel center
+    const normal = right.clone().multiplyScalar(-wallSide);
+
+    const rotMatrix = new THREE.Matrix4();
+    rotMatrix.makeBasis(forward, up, normal);
+    billboardMesh.quaternion.setFromRotationMatrix(rotMatrix);
+  }
+
   spawnBillboard(zDistance) {
     const isLeft = Math.random() < 0.5;
     const typeIndex = Math.floor(Math.random() * 4);
@@ -449,17 +486,7 @@ export class TunnelEngine {
     });
 
     const billboardMesh = new THREE.Mesh(geo, mat);
-
-    const wallXOffset = isLeft ? -7.72 : 7.72;
-    const wallYOffset = 0.0;
-
-    const center = getTunnelCenter(zDistance);
-    const slope = getTunnelSlope(zDistance);
-
-    billboardMesh.position.set(center.x + wallXOffset, center.y + wallYOffset, zDistance);
-
-    const sideRotY = isLeft ? Math.PI / 2 : -Math.PI / 2;
-    billboardMesh.rotation.set(-slope.pitch, -slope.yaw + sideRotY, 0);
+    this.alignBillboardToTunnel(billboardMesh, zDistance, isLeft);
 
     billboardMesh.userData = {
       zPos: zDistance,
@@ -471,11 +498,11 @@ export class TunnelEngine {
   }
 
   trySpawnBillboard(startZ) {
-    // Only spawn billboards on straight tunnel sections (curvature < 0.16)
+    // Only spawn billboards on straight tunnel sections (curvature < 0.14)
     // where the wall is flat and straight, ensuring 100% perfect rectangular posters.
     for (let offset = 0; offset <= 120; offset += 10) {
       const targetZ = startZ - offset;
-      if (getTunnelCurvature(targetZ) < 0.16) {
+      if (getTunnelCurvature(targetZ) < 0.14) {
         this.spawnBillboard(targetZ);
         return targetZ;
       }
@@ -822,20 +849,13 @@ export class TunnelEngine {
       }
     }
 
-    // 6. Update Wall Billboards along Dynamic Tunnel Curve
+    // 6. Update Wall Billboards along Dynamic Tunnel Curve using Basis Matrix Alignment
     for (let i = this.wallBillboards.length - 1; i >= 0; i--) {
       const b = this.wallBillboards[i];
       const zPos = b.userData.zPos;
       const isLeft = b.userData.isLeft;
-      const center = getTunnelCenter(zPos);
-      const slope = getTunnelSlope(zPos);
 
-      const wallXOffset = isLeft ? -7.70 : 7.70;
-      const sideRotY = isLeft ? Math.PI / 2 : -Math.PI / 2;
-
-      b.position.x = center.x + wallXOffset;
-      b.position.y = center.y;
-      b.rotation.set(-slope.pitch, -slope.yaw + sideRotY, 0);
+      this.alignBillboardToTunnel(b, zPos, isLeft);
 
       if (b.position.z > playerZ + 30) {
         this.scene.remove(b);
