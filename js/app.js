@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.17.0
+   Version: v4.18.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -56,12 +56,6 @@ class GameApp {
   startGame() {
     console.log(`[3D Tunnel Rush v${this.version}] Starting game session with 5s focus warmup.`);
     if (this.warmupInterval) clearInterval(this.warmupInterval);
-
-    // Check for software update ONCE when game starts (if online)
-    if (this.swRegistration && navigator.onLine) {
-      console.log(`[SW v${this.version}] Checking for latest software update on game start...`);
-      this.swRegistration.update();
-    }
 
     // Reset player, tunnel, and force Theme 1 (Cyberpunk Neon) on every start / restart
     this.player.reset();
@@ -259,7 +253,7 @@ class GameApp {
         this.player.score,
         this.player.distanceTraveled,
         speedStr,
-        this.player.shield + '%',
+        Math.round(this.player.shield) + '%',
         'x' + this.player.multiplier,
         this.player.lives,
         levelStr
@@ -270,7 +264,7 @@ class GameApp {
         this.player.score,
         this.player.distanceTraveled,
         speedStr,
-        this.player.shield + '%',
+        Math.round(this.player.shield) + '%',
         'x' + this.player.multiplier,
         this.player.lives,
         this.player.gemsForExtraLife
@@ -330,7 +324,7 @@ class GameApp {
     if ('serviceWorker' in navigator) {
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
+        if (!refreshing && this.state !== 'PLAYING' && this.state !== 'WARMUP') {
           refreshing = true;
           window.location.reload();
         }

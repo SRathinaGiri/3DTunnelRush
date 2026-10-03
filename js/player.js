@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY PLAYER SHIP WITH VISUAL AURAS & LIVES SYSTEM
-   Version: v4.17.0
+   Version: v4.18.0
    ========================================================================== */
 
 import { getTunnelCenter, getTunnelSlope } from './tunnel.js';
@@ -258,9 +258,9 @@ export class PlayerShip {
         this.invulnerableTimer = 2.0;
       } else {
         this.shield = 0;
-      }
-      if (window.app && typeof window.app.onPlayerHit === 'function') {
-        window.app.onPlayerHit(this.shield, this.lives);
+        if (window.app && typeof window.app.gameOver === 'function') {
+          window.app.gameOver();
+        }
       }
     }
 
@@ -327,8 +327,8 @@ export class PlayerShip {
         // Green Aura (Matches Red Aura pattern, green color!)
         this.triggerAura(0x00ff66, 1.0);
 
-        // Green Mine / Gem collection restores +10% energy (up to 100%)
-        this.shield = Math.min(100, this.shield + 10);
+        // Green Mine / Gem collection restores +25% energy (up to 100%)
+        this.shield = Math.min(100, this.shield + 25);
 
         this.gemsCollected++;
         this.gemsForExtraLife++;

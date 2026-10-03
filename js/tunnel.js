@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DYNAMIC CURVED 3D TUNNEL & TRACK OBSTACLE ENGINE
-   Version: v4.17.0
+   Version: v4.18.0
    ========================================================================== */
 
 export function getTunnelCenter(z) {
@@ -129,7 +129,18 @@ export class TunnelEngine {
   }
 
   get currentTheme() {
-    return this.themes[this.themeIndex];
+    const t = this.themes[this.themeIndex];
+    const isAnaglyph = (window.app && window.app.renderer && window.app.renderer.mode === 'anaglyph');
+    if (!isAnaglyph) return t;
+
+    // Return Anaglyph-balanced colors (Replaces eye-straining pure Cyan and pure Red with balanced Gold, Orange & Purple)
+    return {
+      ...t,
+      primary: (t.primary === '#00f0ff' || t.primary === '#06b6d4') ? '#f59e0b' : ((t.primary === '#ef4444') ? '#f97316' : t.primary),
+      secondary: (t.secondary === '#00f0ff' || t.secondary === '#06b6d4') ? '#a855f7' : ((t.secondary === '#ec4899') ? '#d946ef' : t.secondary),
+      pPrimary: (t.pPrimary === 0x00f0ff || t.pPrimary === 0x06b6d4) ? 0xf59e0b : ((t.pPrimary === 0xef4444) ? 0xf97316 : t.pPrimary),
+      pSecondary: (t.pSecondary === 0x00f0ff || t.pSecondary === 0x06b6d4) ? 0xa855f7 : t.pSecondary
+    };
   }
 
   nextTheme() {
