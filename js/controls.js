@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY INPUT & CONTROLS HANDLER (KEYBOARD, TOUCH, GYRO)
-   Version: v4.23.0
+   Version: v4.24.0
    ========================================================================== */
 
 export class ControlsHandler {
@@ -13,8 +13,10 @@ export class ControlsHandler {
     };
 
     this.touchActive = false;
-    this.touchStartX = 0;
-    this.touchStartY = 0;
+
+    // Screen Wake Lock API State (keeps mobile screen awake during flight)
+    this.wakeLock = null;
+    this.wakeLockRequested = false;
 
     // Gyroscope / Device Orientation State
     this.gyroEnabled = false;
@@ -30,6 +32,46 @@ export class ControlsHandler {
 
     this.onPauseToggle = null;
     this.initKeyboardListeners();
+    this.setupWakeLockAutoReacquire();
+  }
+
+  async requestWakeLock() {
+    this.wakeLockRequested = true;
+    if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
+      try {
+        if (this.wakeLock !== null) return;
+        this.wakeLock = await navigator.wakeLock.request('screen');
+        console.log('[ControlsHandler] Screen Wake Lock activated (screen kept awake).');
+        this.wakeLock.addEventListener('release', () => {
+          console.log('[ControlsHandler] Screen Wake Lock released.');
+          this.wakeLock = null;
+        });
+      } catch (err) {
+        console.warn('[ControlsHandler] Screen Wake Lock request failed:', err);
+      }
+    }
+  }
+
+  async releaseWakeLock() {
+    this.wakeLockRequested = false;
+    if (this.wakeLock !== null) {
+      try {
+        await this.wakeLock.release();
+        this.wakeLock = null;
+      } catch (err) {
+        console.warn('[ControlsHandler] Screen Wake Lock release error:', err);
+      }
+    }
+  }
+
+  setupWakeLockAutoReacquire() {
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState === 'visible' && this.wakeLockRequested) {
+          await this.requestWakeLock();
+        }
+      });
+    }
   }
 
   toggleGyroscope(onStateChange) {
@@ -260,36 +302,101 @@ export class ControlsHandler {
     addTouchEvents(btnDown, 'down');
   }
 
-  bindCanvasTouchSwipe(canvasElement) {
-    if (!canvasElement) return;
+  bindScreenTouchControls(containerElement) {
+    if (!containerElement) return;
 
-    canvasElement.addEventListener('touchstart', (e) => {
-      if (e.touches.length > 0) {
-        this.touchActive = true;
-        this.touchStartX = e.touches[0].clientX;
-        this.touchStartY = e.touches[0].clientY;
+    const touchMap = new Map();
+
+    const updateKeysFromTouches = (e) => {
+      let left = false;
+      let right = false;
+      let up = false;
+      let down = false;
+
+      const windowW = window.innerWidth;
+      const windowH = window.innerHeight;
+
+      for (let i = 0; i < e.touches.length; i++) {
+        const touch = e.touches[i];
+        const touchData = touchMap.get(touch.identifier);
+
+        const curX = touch.clientX;
+        const curY = touch.clientY;
+        const startX = touchData ? touchData.startX : curX;
+        const startY = touchData ? touchData.startY : curY;
+
+        const deltaX = curX - startX;
+        const deltaY = curY - startY;
+
+        // 1. Horizontal steering: Left 50% screen OR swipe left -> LEFT; Right 50% screen OR swipe right -> RIGHT
+        if (curX < windowW * 0.5 || deltaX < -15) {
+          left = true;
+        }
+        if (curX >= windowW * 0.5 || deltaX > 15) {
+          right = true;
+        }
+
+        // 2. Vertical steering: Top 40% screen OR swipe UP (deltaY < -12) -> UP; Bottom 40% screen OR swipe DOWN (deltaY > 12) -> DOWN
+        if (curY < windowH * 0.40 || deltaY < -12) {
+          up = true;
+        } else if (curY > windowH * 0.60 || deltaY > 12) {
+          down = true;
+        }
       }
-    }, { passive: true });
 
-    canvasElement.addEventListener('touchmove', (e) => {
-      if (!this.touchActive || e.touches.length === 0) return;
-      const dx = e.touches[0].clientX - this.touchStartX;
-      const dy = e.touches[0].clientY - this.touchStartY;
-      const threshold = 10;
+      this.keys.left = left;
+      this.keys.right = right;
+      this.keys.up = up;
+      this.keys.down = down;
+    };
 
-      this.keys.left = dx < -threshold;
-      this.keys.right = dx > threshold;
-      this.keys.up = dy < -threshold;   // Swiping UP decreases Y
-      this.keys.down = dy > threshold;  // Swiping DOWN increases Y
-    }, { passive: true });
+    const handleTouchStart = (e) => {
+      // Request Wake Lock on touch gesture to keep screen awake during play
+      this.requestWakeLock();
 
-    canvasElement.addEventListener('touchend', () => {
-      this.touchActive = false;
-      this.keys.left = false;
-      this.keys.right = false;
-      this.keys.up = false;
-      this.keys.down = false;
-    });
+      const targetBtn = e.target.closest('button, input, select, .modal-card, .modal-overlay, .icon-btn, .vk-btn-large');
+      if (targetBtn) return;
+
+      if (e.cancelable) e.preventDefault();
+
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        touchMap.set(t.identifier, { startX: t.clientX, startY: t.clientY });
+      }
+
+      updateKeysFromTouches(e);
+    };
+
+    const handleTouchMove = (e) => {
+      const targetBtn = e.target.closest('button, input, select, .modal-card, .modal-overlay, .icon-btn, .vk-btn-large');
+      if (targetBtn) return;
+
+      if (e.cancelable) e.preventDefault();
+
+      updateKeysFromTouches(e);
+    };
+
+    const handleTouchEnd = (e) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        touchMap.delete(t.identifier);
+      }
+
+      if (e.touches.length === 0) {
+        this.reset();
+      } else {
+        updateKeysFromTouches(e);
+      }
+    };
+
+    containerElement.addEventListener('touchstart', handleTouchStart, { passive: false });
+    containerElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+    containerElement.addEventListener('touchend', handleTouchEnd, { passive: false });
+    containerElement.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+  }
+
+  bindCanvasTouchSwipe(element) {
+    this.bindScreenTouchControls(element);
   }
 
   reset() {

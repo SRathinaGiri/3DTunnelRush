@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.23.0
+   Version: v4.24.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.23.0';
+    this.version = '4.24.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -30,6 +30,7 @@ class GameApp {
 
     // Subsystems
     const canvas = document.getElementById('gameCanvas');
+    const gamePage = document.getElementById('gamePage') || canvas;
     this.renderer = new StereoRenderEngine(canvas);
     this.tunnel = new TunnelEngine(this.scene);
     this.player = new PlayerShip(this.scene);
@@ -38,9 +39,9 @@ class GameApp {
     this.hud3d = new HUD3DEngine(this.scene, this.renderer.mainCamera);
     this.ui = new UIManager(this);
 
-    // Setup input bindings
+    // Setup input bindings (virtual keypad + full-screen touch region steering)
     this.controls.bindVirtualKeypad();
-    this.controls.bindCanvasTouchSwipe(canvas);
+    this.controls.bindScreenTouchControls(gamePage);
     this.controls.onPauseToggle = () => this.togglePause();
 
     // Register Service Worker for PWA Offline functionality & Internet Update Awareness
@@ -70,6 +71,7 @@ class GameApp {
     this.tunnel.reset();
     this.tunnel.setThemeByLevel(1);
     this.controls.reset();
+    this.controls.requestWakeLock(); // Keep mobile screen active during gameplay
     this.ui.showGamePage();
 
     this.state = 'WARMUP';
@@ -115,11 +117,13 @@ class GameApp {
       this.hud3d.showPauseBanner();
       this.ui.togglePauseScreen(true);
       this.audio.stopAmbientMusic();
+      this.controls.releaseWakeLock();
     } else if (this.state === 'PAUSED') {
       this.state = 'PLAYING';
       this.hud3d.hideCenterBanner();
       this.ui.togglePauseScreen(false);
       this.audio.startAmbientMusic();
+      this.controls.requestWakeLock();
     }
   }
 
@@ -132,6 +136,7 @@ class GameApp {
     this.audio.stopAmbientMusic();
     this.hud3d.hideCenterBanner();
     this.hud3d.hideEnergyBoostNotice();
+    this.controls.releaseWakeLock();
     this.ui.showMenuPage();
   }
 
@@ -144,6 +149,7 @@ class GameApp {
     this.audio.stopAmbientMusic();
     this.audio.playExplosionSound();
     this.hud3d.showGameOverBanner(this.player.score, this.player.distanceTraveled);
+    this.controls.releaseWakeLock();
     this.ui.showGameOver(this.player.score, this.player.distanceTraveled);
   }
 
