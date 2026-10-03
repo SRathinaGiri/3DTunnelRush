@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - STEREOSCOPIC 3D RENDER ENGINE (STEREO.JS ARCHITECTURE)
-   Version: v4.22.0
+   Version: v4.23.0
    ========================================================================== */
 
 export class StereoRenderEngine {
@@ -224,26 +224,27 @@ export class StereoRenderEngine {
     if (!frameElement) return;
 
     const isDual = (this.mode === 'parallel' || this.mode === 'cross');
+    const isMobileLandscape = window.innerHeight < 550;
 
-    // Reserved vertical height for header overlay, solid block HUD, virtual keypad & padding
-    const reservedHeight = 220;
-    const availH = Math.max(180, window.innerHeight - reservedHeight);
-    const availW = Math.max(180, window.innerWidth - 24);
+    // Reserved vertical height for header/toolbar margins
+    // On mobile landscape, reserve only 50px so 3D Viewport fills 90% of screen height for VR/Smart Glasses!
+    const reservedHeight = isMobileLandscape ? 50 : (isDual ? 110 : 150);
+    const availH = Math.max(160, window.innerHeight - reservedHeight);
+    const availW = Math.max(160, window.innerWidth - 12);
 
     let frameW = 500;
     let frameH = 500;
 
     if (isDual) {
       // Dual Viewport (Parallel / Cross 3D): EXACT 2:1 Aspect Ratio (2 x Square Eye Viewports)
-      // Height constrained by availH in Landscape, Width constrained by availW in Portrait
       let eyeH = Math.min(availH, availW / 2);
-      eyeH = Math.min(eyeH, 550); // Cap max eye height on ultra-wide screens
+      eyeH = Math.min(eyeH, 650); // Cap max eye height
       frameH = Math.round(eyeH);
       frameW = Math.round(eyeH * 2);
     } else {
       // Single Viewport (2D / Anaglyph): EXACT 1:1 Aspect Ratio (Square)
       let squareS = Math.min(availW, availH);
-      squareS = Math.min(squareS, 650); // Cap max square size
+      squareS = Math.min(squareS, 750); // Cap max square size
       frameW = Math.round(squareS);
       frameH = Math.round(squareS);
     }
