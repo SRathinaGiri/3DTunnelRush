@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v4.10.0
+   Version: v4.11.0
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -45,30 +45,21 @@ export class HUD3DEngine {
   }
 
   initHUD() {
-    // 1. Single Compact One-Line 3D HUD Panel positioned at the bottom center of camera view
-    this.bottomHudSprite = this.createCanvasSprite(600, 60);
-    this.bottomHudSprite.scale.set(3.2, 0.32, 1);
-    this.bottomHudSprite.position.set(0, -1.65, -3.5); // Bottom center of view frustum
-    this.bottomHudSprite.visible = true;
-    this.hudGroup.add(this.bottomHudSprite);
-
-    this.topHudSprite = this.bottomHudSprite; // Backward compatibility alias
-
-    // 2. High Score Banner (Positioned at top of viewport during menus/warmup)
+    // 1. High Score Banner (Positioned at top of viewport during menus/warmup)
     this.highScoreSprite = this.createCanvasSprite(400, 60);
     this.highScoreSprite.scale.set(1.8, 0.27, 1);
     this.highScoreSprite.position.set(0, 1.70, -3.5);
     this.highScoreSprite.visible = false;
     this.hudGroup.add(this.highScoreSprite);
 
-    // 3. Energy Boost Notification (Center High)
+    // 2. Energy Boost Notification (Center High)
     this.boostNoticeSprite = this.createCanvasSprite(500, 70);
     this.boostNoticeSprite.scale.set(2.6, 0.364, 1);
     this.boostNoticeSprite.position.set(0, 0.85, -3.5);
     this.boostNoticeSprite.visible = false;
     this.hudGroup.add(this.boostNoticeSprite);
 
-    // 4. Center Banner (Countdown, Pause, Game Over)
+    // 3. Center Banner (Countdown, Pause, Game Over)
     this.centerBannerSprite = this.createCanvasSprite(500, 200);
     this.centerBannerSprite.scale.set(2.8, 1.12, 1);
     this.centerBannerSprite.position.set(0, 0, -3.5);
@@ -97,10 +88,11 @@ export class HUD3DEngine {
     this.cockpitAuraMesh.position.set(0, 0, -2.52);
     this.cockpitGroup.add(this.cockpitAuraMesh);
 
-    // 2. Reticle overlay permanently removed once for all per user directive
-    this.cockpitReticleSprite = this.createCanvasSprite(400, 240);
-    this.cockpitReticleSprite.visible = false;
-    this.cockpitGroup.add(this.cockpitReticleSprite);
+    // 2. Cockpit View Reticle & Speedometer HUD positioned at flight depth (Z = -2.50)
+    this.cockpitHudSprite = this.createCanvasSprite(400, 160);
+    this.cockpitHudSprite.scale.set(1.8, 0.72, 1);
+    this.cockpitHudSprite.position.set(0, -0.35, -2.50);
+    this.cockpitGroup.add(this.cockpitHudSprite);
 
     this.cockpitAuraTimer = 0;
     this.cockpitAuraMaxDuration = 1.0;
@@ -109,23 +101,13 @@ export class HUD3DEngine {
   }
 
   renderCockpitTelemetry(speedStr, shieldStr, distStr) {
-    // Reticle frame & telemetry canvas drawing removed permanently per user request
-    if (this.cockpitReticleSprite) {
-      this.cockpitReticleSprite.visible = false;
-    }
+    this.renderCockpitHud();
   }
 
   setCockpitVisible(visible) {
     this.isCockpitView = visible;
     if (this.cockpitGroup) {
       this.cockpitGroup.visible = visible;
-    }
-    if (this.cockpitReticleSprite) {
-      this.cockpitReticleSprite.visible = false;
-    }
-    if (this.bottomHudSprite) {
-      // 1-Line Bottom HUD panel shown in BOTH views (Chase and Cockpit)
-      this.bottomHudSprite.visible = true;
     }
   }
 
@@ -180,8 +162,13 @@ export class HUD3DEngine {
     this.currentLives = lives !== undefined ? lives : 3;
     this.currentGemsForExtraLife = gemsForExtraLife || 0;
 
-    this.renderBottomHud();
-    if (this.bottomHudSprite) this.bottomHudSprite.visible = true;
+    // Render Chase View flight telemetry strip (attached directly below the player ship)
+    if (window.app && window.app.player && window.app.player.shipHudSprite) {
+      this.renderTelemetryStrip(window.app.player.shipHudSprite);
+    }
+
+    // Render Cockpit View reticle + speedometer HUD
+    this.renderCockpitHud();
   }
 
   renderTopHud() {
@@ -189,48 +176,47 @@ export class HUD3DEngine {
   }
 
   renderBottomHud() {
-    if (!this.bottomHudSprite) return;
-    const obj = this.bottomHudSprite.userData;
-    const ctx = obj.ctx;
-    ctx.clearRect(0, 0, 600, 60);
+    if (window.app && window.app.player && window.app.player.shipHudSprite) {
+      this.renderTelemetryStrip(window.app.player.shipHudSprite);
+    }
+    this.renderCockpitHud();
+  }
 
-    // Sleek Single-Line Pill Background Container
-    ctx.fillStyle = 'rgba(2, 6, 23, 0.65)';
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
-    ctx.lineWidth = 2.5;
+  renderTelemetryStrip(sprite) {
+    if (!sprite) return;
+    const obj = sprite.userData;
+    const ctx = obj.ctx;
+    ctx.clearRect(0, 0, 380, 40);
+
+    // Sleek 90% Opaque Dark Background Container
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.90)';
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.65)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(8, 6, 584, 48, 24);
+    ctx.roundRect(4, 4, 372, 32, 16);
     ctx.fill();
     ctx.stroke();
 
-    // Subtle Vertical Column Dividers for 4 Columns
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.30)';
-    ctx.lineWidth = 1.5;
+    // Subtle Vertical Column Separators (3 dividers for 4 columns)
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+    ctx.lineWidth = 1.0;
     ctx.beginPath();
-    ctx.moveTo(150, 12); ctx.lineTo(150, 48);
-    ctx.moveTo(300, 12); ctx.lineTo(300, 48);
-    ctx.moveTo(450, 12); ctx.lineTo(450, 48);
+    ctx.moveTo(98, 8);  ctx.lineTo(98, 32);
+    ctx.moveTo(190, 8); ctx.lineTo(190, 32);
+    ctx.moveTo(282, 8); ctx.lineTo(282, 32);
     ctx.stroke();
 
-    ctx.shadowBlur = 6;
+    ctx.shadowBlur = 4;
 
-    // =========================================================================
-    // EXACTLY 4 KPIs ONLY IN ONE SINGLE LINE (NO LABELS):
-    // 1. SPEED (e.g. 75 km/h)
-    // 2. 3 HEARTS (e.g. ❤️ ❤️ ❤️)
-    // 3. ENERGY LEVEL (100% & 75% green, 50% yellow, 25% red)
-    // 4. DISTANCE IN METERS (e.g. 1235 m)
-    // =========================================================================
-
-    // 1. KPI 1: SPEED (Center X = 79)
+    // 1. KPI 1: SPEED (Center X = 51)
     ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
     ctx.fillStyle = '#00f0ff';
-    ctx.font = 'bold 22px monospace';
+    ctx.font = 'bold 13px monospace';
     ctx.textAlign = 'center';
     const cleanSpeed = (this.currentSpeedStr || '40 km/h').toLowerCase();
-    ctx.fillText(cleanSpeed, 79, 38);
+    ctx.fillText(cleanSpeed, 51, 25);
 
-    // 2. KPI 2: LIVES / HEARTS (Center X = 225)
+    // 2. KPI 2: HEARTS / LIVES (Center X = 144)
     ctx.shadowColor = 'rgba(239, 68, 68, 0.8)';
     const lives = this.currentLives !== undefined ? this.currentLives : 3;
     let heartsText = '';
@@ -240,12 +226,12 @@ export class HUD3DEngine {
     else heartsText = '🖤 🖤 🖤';
 
     ctx.fillStyle = '#ff0055';
-    ctx.font = 'bold 19px sans-serif';
+    ctx.font = 'bold 12px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(heartsText, 225, 37);
+    ctx.fillText(heartsText, 144, 25);
 
-    // 3. KPI 3: ENERGY LEVEL (Center X = 375)
-    // 100% & 75% -> Green, 50% -> Yellow, 25% or lower -> Red
+    // 3. KPI 3: ENERGY LEVEL % (Center X = 236)
+    // Color coding: 100% & 75% -> Green, 50% -> Yellow, 25% or lower -> Red
     const rawShield = parseInt(this.currentShieldStr || '100', 10);
     const energyVal = isNaN(rawShield) ? 100 : rawShield;
     let energyColor = '#22c55e'; // Green
@@ -260,17 +246,123 @@ export class HUD3DEngine {
 
     ctx.shadowColor = energyGlow;
     ctx.fillStyle = energyColor;
-    ctx.font = 'bold 22px monospace';
+    ctx.font = 'bold 13px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText((this.currentShieldStr || '100%'), 375, 38);
+    ctx.fillText((this.currentShieldStr || '100%'), 236, 25);
 
-    // 4. KPI 4: DISTANCE IN METERS (Center X = 525)
+    // 4. KPI 4: DISTANCE IN METERS (Center X = 331)
     ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px monospace';
+    ctx.font = 'bold 13px monospace';
     ctx.textAlign = 'center';
     const distText = Math.round(this.currentDist || 0) + ' m';
-    ctx.fillText(distText, 525, 38);
+    ctx.fillText(distText, 331, 25);
+
+    ctx.shadowBlur = 0;
+    obj.texture.needsUpdate = true;
+  }
+
+  renderCockpitHud() {
+    if (!this.cockpitHudSprite) return;
+    const obj = this.cockpitHudSprite.userData;
+    const ctx = obj.ctx;
+    ctx.clearRect(0, 0, 400, 160);
+
+    // Top Section: Sleek Cockpit Sightline Reticle Box & Crosshair
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.roundRect(140, 10, 120, 70, 10);
+    ctx.stroke();
+
+    // Corner Bracket Accent Ticks
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(130, 25); ctx.lineTo(130, 5); ctx.lineTo(155, 5);
+    ctx.moveTo(270, 25); ctx.lineTo(270, 5); ctx.lineTo(245, 5);
+    ctx.moveTo(130, 65); ctx.lineTo(130, 85); ctx.lineTo(155, 85);
+    ctx.moveTo(270, 65); ctx.lineTo(270, 85); ctx.lineTo(245, 85);
+    ctx.stroke();
+
+    // Crosshair Ticks
+    ctx.strokeStyle = '#ec4899';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(200, 25); ctx.lineTo(200, 40);
+    ctx.moveTo(200, 50); ctx.lineTo(200, 65);
+    ctx.moveTo(165, 45); ctx.lineTo(185, 45);
+    ctx.moveTo(215, 45); ctx.lineTo(235, 45);
+    ctx.stroke();
+
+    // Bottom Section: 90% Opaque 4-KPI Telemetry Strip
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.90)';
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.65)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(10, 108, 380, 42, 18);
+    ctx.fill();
+    ctx.stroke();
+
+    // Vertical Separators
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+    ctx.lineWidth = 1.0;
+    ctx.beginPath();
+    ctx.moveTo(105, 114); ctx.lineTo(105, 144);
+    ctx.moveTo(200, 114); ctx.lineTo(200, 144);
+    ctx.moveTo(295, 114); ctx.lineTo(295, 144);
+    ctx.stroke();
+
+    ctx.shadowBlur = 4;
+
+    // 1. SPEED (Center X = 57)
+    ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
+    ctx.fillStyle = '#00f0ff';
+    ctx.font = 'bold 14px monospace';
+    ctx.textAlign = 'center';
+    const cleanSpeed = (this.currentSpeedStr || '40 km/h').toLowerCase();
+    ctx.fillText(cleanSpeed, 57, 134);
+
+    // 2. HEARTS / LIVES (Center X = 152)
+    ctx.shadowColor = 'rgba(239, 68, 68, 0.8)';
+    const lives = this.currentLives !== undefined ? this.currentLives : 3;
+    let heartsText = '';
+    if (lives >= 3) heartsText = '❤️ ❤️ ❤️';
+    else if (lives === 2) heartsText = '❤️ ❤️ 🖤';
+    else if (lives === 1) heartsText = '❤️ 🖤 🖤';
+    else heartsText = '🖤 🖤 🖤';
+
+    ctx.fillStyle = '#ff0055';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(heartsText, 152, 134);
+
+    // 3. ENERGY LEVEL % (Center X = 247)
+    const rawShield = parseInt(this.currentShieldStr || '100', 10);
+    const energyVal = isNaN(rawShield) ? 100 : rawShield;
+    let energyColor = '#22c55e';
+    let energyGlow = 'rgba(34, 197, 94, 0.8)';
+    if (energyVal <= 30) {
+      energyColor = '#ef4444';
+      energyGlow = 'rgba(239, 68, 68, 0.8)';
+    } else if (energyVal <= 60) {
+      energyColor = '#f59e0b';
+      energyGlow = 'rgba(245, 158, 11, 0.8)';
+    }
+
+    ctx.shadowColor = energyGlow;
+    ctx.fillStyle = energyColor;
+    ctx.font = 'bold 14px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText((this.currentShieldStr || '100%'), 247, 134);
+
+    // 4. DISTANCE (Center X = 343)
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px monospace';
+    ctx.textAlign = 'center';
+    const distText = Math.round(this.currentDist || 0) + ' m';
+    ctx.fillText(distText, 343, 134);
 
     ctx.shadowBlur = 0;
     obj.texture.needsUpdate = true;

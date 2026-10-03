@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY PLAYER SHIP WITH VISUAL AURAS & LIVES SYSTEM
-   Version: v4.9.0
+   Version: v4.11.0
    ========================================================================== */
 
 import { getTunnelCenter, getTunnelSlope } from './tunnel.js';
@@ -98,6 +98,27 @@ export class PlayerShip {
     this.auraMesh = new THREE.Mesh(auraGeo, this.auraMat);
     this.auraMesh.visible = false;
     shipGroup.add(this.auraMesh);
+
+    // 3D Compact Telemetry HUD Strip attached directly below the ship's wings at the exact flight depth
+    const canvas = document.createElement('canvas');
+    canvas.width = 380;
+    canvas.height = 40;
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+
+    const mat = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false
+    });
+
+    this.shipHudSprite = new THREE.Sprite(mat);
+    this.shipHudSprite.userData = { canvas, ctx: canvas.getContext('2d'), texture };
+    this.shipHudSprite.position.set(0, -0.65, -0.15);
+    this.shipHudSprite.scale.set(1.4, 0.147, 1);
+    shipGroup.add(this.shipHudSprite);
 
     return shipGroup;
   }
