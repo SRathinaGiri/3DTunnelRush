@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DYNAMIC CURVED 3D TUNNEL & TRACK OBSTACLE ENGINE
-   Version: v4.18.0
+   Version: v4.19.0
    ========================================================================== */
 
 export function getTunnelCenter(z) {
@@ -692,14 +692,14 @@ export class TunnelEngine {
     // 6. Infinite Dynamic Procedural Spawning Ahead of Player (SUPPRESSED during level warp transition!)
     while (this.nextSpawnZ > playerZ - 1200) {
       if (!isTransitioning) {
-        if (Math.random() > 0.30) {
+        if (Math.random() > 0.25) {
           this.spawnObstacle(this.nextSpawnZ);
         }
-        if (Math.random() > 0.35) {
-          this.spawnGem(this.nextSpawnZ - 18);
+        if (Math.random() > 0.30) {
+          this.spawnGem(this.nextSpawnZ - 14);
         }
       }
-      this.nextSpawnZ -= 38;
+      this.nextSpawnZ -= 28;
     }
   }
 
@@ -716,13 +716,13 @@ export class TunnelEngine {
 
     this.nextSpawnZ = -120;
     while (this.nextSpawnZ > -1200) {
-      if (Math.random() > 0.30) {
+      if (Math.random() > 0.25) {
         this.spawnObstacle(this.nextSpawnZ);
       }
-      if (Math.random() > 0.35) {
-        this.spawnGem(this.nextSpawnZ - 18);
+      if (Math.random() > 0.30) {
+        this.spawnGem(this.nextSpawnZ - 14);
       }
-      this.nextSpawnZ -= 38;
+      this.nextSpawnZ -= 28;
     }
   }
 }

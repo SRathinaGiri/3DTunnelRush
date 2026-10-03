@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.18.0
+   Version: v4.19.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
