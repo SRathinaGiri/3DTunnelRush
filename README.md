@@ -33,9 +33,9 @@ An immersive, high-speed 3D stereoscopic tunnel rush Progressive Web App (PWA) b
 
 ## 🌟 Key Features
 
-### 👓 1. Four 3D Viewing Modes
+### 👓 1. Four 3D Viewing Modes & VR Headset Compatibility
 - **2D View**: Standard single-camera 3D viewport.
-- **Parallel 3D (Side-by-Side)**: Designed for VR headsets, 3D viewers, or parallel eye relaxation.
+- **Parallel 3D (Side-by-Side)**: Designed for VR headsets (Meta Quest 1/2/3/Pro, Pico, Apple Vision Pro), smart glasses (RayNeo Air, XREAL), Google Cardboard, or parallel eye relaxation.
 - **Cross-Eye 3D (Side-by-Side)**: Designed for cross-eye 3D viewing—no hardware or glasses required!
 - **Anaglyph 3D**: True 2-pass Red-Cyan 3D compositing—wear standard Red/Blue 3D glasses!
 - **Real-time 3D Controls**: Adjust Eye Separation (IPD slider), Focal Convergence Plane, and Swap Left/Right Eyes on the fly.
@@ -53,11 +53,12 @@ An immersive, high-speed 3D stereoscopic tunnel rush Progressive Web App (PWA) b
 - **Level 6 (5000m+)**: *Synthwave Sunset* (Purple & Gold retrowave grid)
 - **Level Warp Surge**: Reaching every 1,000 meters triggers a 3.5s 1.8x hyper-warp speed surge with glowing cyan energy shell flashes.
 
-### 🎮 4. Flexible 4-Way Flight Controls
+### 🎮 4. Flexible 4-Way Controls & Mobile/VR Optimizations
 - **Keyboard**: Arrow Keys / `W`, `A`, `S`, `D` for 4-way steering.
-- **Touch Virtual Keypad**: Large on-screen touch buttons (`LEFT`, `UP`, `DOWN`, `RIGHT`).
-- **Touch Swipe**: Drag/swipe finger across canvas to steer.
+- **Full-Screen Region & Gesture Touch**: Touch anywhere on the left 50% or right 50% of the screen to steer Left/Right; tap the upper/lower 40% region or drag your finger up/down anywhere to fly Up/Down. Supports dual-thumb arcade control!
+- **Touch Virtual Keypad**: Dedicated on-screen touch buttons (`LEFT`, `UP`, `DOWN`, `RIGHT`).
 - **Mobile Gyroscope**: Tilt smartphone up, down, left, or right for hands-free flight control.
+- **Continuous Screen Wake Lock API**: Uses `navigator.wakeLock` to keep mobile, tablet, and VR headset screens awake during flight—preventing screen dimming or timeout during gyro & VR play.
 
 ### 🔊 5. Web Audio API Synthesizer (100% Zero-Asset Audio)
 - Real-time procedural audio synthesis generated entirely in code using Web Audio API oscillators and filters:
@@ -73,19 +74,19 @@ An immersive, high-speed 3D stereoscopic tunnel rush Progressive Web App (PWA) b
   - Persistent High Score tracking.
 
 ### 📱 7. Progressive Web App (PWA) & Offline Play
-- Fully installable on iOS, Android, macOS, and Windows.
+- Fully installable on iOS, Android, macOS, Windows, and Meta Quest OS.
 - Self-contained Service Worker (`sw.js`) caches all assets locally for 100% offline play.
 
 ---
 
 ## 🎮 Controls Summary
 
-| Control Action | Keyboard | Touch / Mobile |
+| Control Action | Keyboard | Touch / Mobile / VR |
 | :--- | :--- | :--- |
-| **Steer Left** | `Left Arrow` / `A` | `◄ LEFT` button / Swipe Left |
-| **Steer Right** | `Right Arrow` / `D` | `RIGHT ►` button / Swipe Right |
-| **Fly Up** | `Up Arrow` / `W` | `▲ UP` button / Swipe Up |
-| **Fly Down** | `Down Arrow` / `S` | `▼ DOWN` button / Swipe Down |
+| **Steer Left** | `Left Arrow` / `A` | Touch Left Half Screen / `◄ LEFT` / Swipe Left |
+| **Steer Right** | `Right Arrow` / `D` | Touch Right Half Screen / `RIGHT ►` / Swipe Right |
+| **Fly Up** | `Up Arrow` / `W` | Touch Top 40% Screen / `▲ UP` / Drag Up |
+| **Fly Down** | `Down Arrow` / `S` | Touch Bottom 40% Screen / `▼ DOWN` / Drag Down |
 | **Pause Game** | `P` / `Space` | `⏸️` Icon Button |
 | **Toggle View** | `V` | `🎥` Icon Button |
 | **Toggle Gyro** | - | `📱` Icon Button |
