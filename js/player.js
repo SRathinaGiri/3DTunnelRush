@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY PLAYER SHIP WITH VISUAL AURAS & LIVES SYSTEM
-   Version: v4.12.0
+   Version: v4.13.0
    ========================================================================== */
 
 import { getTunnelCenter, getTunnelSlope } from './tunnel.js';
@@ -116,8 +116,8 @@ export class PlayerShip {
 
     this.shipHudSprite = new THREE.Sprite(mat);
     this.shipHudSprite.userData = { canvas, ctx: canvas.getContext('2d'), texture };
-    this.shipHudSprite.position.set(0, -0.75, -0.15);
-    this.shipHudSprite.scale.set(3.0, 0.375, 1);
+    this.shipHudSprite.position.set(0, -0.90, -0.15);
+    this.shipHudSprite.scale.set(5.5, 0.6875, 1);
     shipGroup.add(this.shipHudSprite);
 
     return shipGroup;

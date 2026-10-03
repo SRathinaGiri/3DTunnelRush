@@ -55,11 +55,15 @@ export class UIManager {
     const toggleAudio = (e) => {
       if (e) e.preventDefault();
       const isMuted = this.app.audio.toggleMute();
-      const text = isMuted ? '🔇 Muted' : '🔊 Sound';
       const btn1 = document.getElementById('audioToggle');
       const btn2 = document.getElementById('gameAudioBtn');
-      if (btn1) btn1.textContent = text;
-      if (btn2) btn2.textContent = text;
+      if (btn1) btn1.textContent = isMuted ? '🔇 Muted' : '🔊 Sound';
+      if (btn2) {
+        btn2.textContent = isMuted ? '🔇' : '🔊';
+        btn2.title = isMuted ? 'Sound: Muted' : 'Sound: ON';
+        if (isMuted) btn2.classList.add('active');
+        else btn2.classList.remove('active');
+      }
     };
     
     const audioBtn = document.getElementById('audioToggle');
@@ -79,17 +83,17 @@ export class UIManager {
       this.app.controls.toggleGyroscope((enabled) => {
         const text = enabled ? 'Gyro: ON' : 'Gyro: OFF';
         const badge1 = document.getElementById('gyroBadge');
-        const badge2 = document.getElementById('gameGyroBadge');
         const btn1 = document.getElementById('gyroToggle');
         const btn2 = document.getElementById('gameGyroBtn');
         if (badge1) badge1.textContent = text;
-        if (badge2) badge2.textContent = text;
-        if (enabled) {
-          if (btn1) btn1.classList.add('active');
-          if (btn2) btn2.classList.add('active');
-        } else {
-          if (btn1) btn1.classList.remove('active');
-          if (btn2) btn2.classList.remove('active');
+        if (btn1) {
+          if (enabled) btn1.classList.add('active');
+          else btn1.classList.remove('active');
+        }
+        if (btn2) {
+          btn2.title = enabled ? 'Gyro: ON' : 'Gyro: OFF';
+          if (enabled) btn2.classList.add('active');
+          else btn2.classList.remove('active');
         }
       });
     };
@@ -336,7 +340,7 @@ export class UIManager {
       else btn1.classList.remove('active');
     }
     if (btn2) {
-      btn2.textContent = text;
+      btn2.title = (mode === 'COCKPIT') ? 'View: Cockpit' : 'View: Chase';
       if (mode === 'COCKPIT') btn2.classList.add('active');
       else btn2.classList.remove('active');
     }

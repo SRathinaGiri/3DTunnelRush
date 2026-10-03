@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v4.12.0
+   Version: v4.13.0
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -211,10 +211,10 @@ export class HUD3DEngine {
     // 1. KPI 1: SPEED (Center X = 57)
     ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
     ctx.fillStyle = '#00f0ff';
-    ctx.font = 'bold 14px monospace';
+    ctx.font = 'bold 18px monospace';
     ctx.textAlign = 'center';
     const cleanSpeed = (this.currentSpeedStr || '40 km/h').toLowerCase();
-    ctx.fillText(cleanSpeed, 57, 30);
+    ctx.fillText(cleanSpeed, 57, 32);
 
     // 2. KPI 2: HEARTS / LIVES (Center X = 152)
     ctx.shadowColor = 'rgba(239, 68, 68, 0.8)';
@@ -226,9 +226,9 @@ export class HUD3DEngine {
     else heartsText = '🖤 🖤 🖤';
 
     ctx.fillStyle = '#ff0055';
-    ctx.font = 'bold 13px sans-serif';
+    ctx.font = 'bold 16px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(heartsText, 152, 30);
+    ctx.fillText(heartsText, 152, 32);
 
     // 3. KPI 3: ENERGY LEVEL % (Center X = 247)
     const rawShield = parseInt(this.currentShieldStr || '100', 10);
@@ -245,17 +245,17 @@ export class HUD3DEngine {
 
     ctx.shadowColor = energyGlow;
     ctx.fillStyle = energyColor;
-    ctx.font = 'bold 14px monospace';
+    ctx.font = 'bold 18px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText((this.currentShieldStr || '100%'), 247, 30);
+    ctx.fillText((this.currentShieldStr || '100%'), 247, 32);
 
     // 4. KPI 4: DISTANCE IN METERS (Center X = 343)
     ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px monospace';
+    ctx.font = 'bold 18px monospace';
     ctx.textAlign = 'center';
     const distText = Math.round(this.currentDist || 0) + ' m';
-    ctx.fillText(distText, 343, 30);
+    ctx.fillText(distText, 343, 32);
 
     ctx.shadowBlur = 0;
     obj.texture.needsUpdate = true;
@@ -267,15 +267,15 @@ export class HUD3DEngine {
     const ctx = obj.ctx;
     ctx.clearRect(0, 0, 400, 200);
 
-    // Top Section: Sleek Cockpit Sightline Reticle Box & Crosshair
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
+    // Top Section: 50% Transparent Cockpit Sightline Reticle Box & Crosshair
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.50)';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.roundRect(140, 10, 120, 70, 10);
     ctx.stroke();
 
-    // Corner Bracket Accent Ticks
-    ctx.strokeStyle = '#00f0ff';
+    // Corner Bracket Accent Ticks (50% transparent)
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.50)';
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(130, 25); ctx.lineTo(130, 5); ctx.lineTo(155, 5);
@@ -284,8 +284,8 @@ export class HUD3DEngine {
     ctx.moveTo(270, 65); ctx.lineTo(270, 85); ctx.lineTo(245, 85);
     ctx.stroke();
 
-    // Crosshair Ticks
-    ctx.strokeStyle = '#ec4899';
+    // Crosshair Ticks (50% transparent)
+    ctx.strokeStyle = 'rgba(236, 72, 153, 0.50)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(200, 25); ctx.lineTo(200, 40);
@@ -317,10 +317,10 @@ export class HUD3DEngine {
     // 1. SPEED (Center X = 57)
     ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
     ctx.fillStyle = '#00f0ff';
-    ctx.font = 'bold 14px monospace';
+    ctx.font = 'bold 18px monospace';
     ctx.textAlign = 'center';
     const cleanSpeed = (this.currentSpeedStr || '40 km/h').toLowerCase();
-    ctx.fillText(cleanSpeed, 57, 160);
+    ctx.fillText(cleanSpeed, 57, 162);
 
     // 2. HEARTS / LIVES (Center X = 152)
     ctx.shadowColor = 'rgba(239, 68, 68, 0.8)';
@@ -332,9 +332,9 @@ export class HUD3DEngine {
     else heartsText = '🖤 🖤 🖤';
 
     ctx.fillStyle = '#ff0055';
-    ctx.font = 'bold 13px sans-serif';
+    ctx.font = 'bold 16px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(heartsText, 152, 160);
+    ctx.fillText(heartsText, 152, 162);
 
     // 3. ENERGY LEVEL % (Center X = 247)
     const rawShield = parseInt(this.currentShieldStr || '100', 10);
@@ -351,17 +351,17 @@ export class HUD3DEngine {
 
     ctx.shadowColor = energyGlow;
     ctx.fillStyle = energyColor;
-    ctx.font = 'bold 14px monospace';
+    ctx.font = 'bold 18px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText((this.currentShieldStr || '100%'), 247, 160);
+    ctx.fillText((this.currentShieldStr || '100%'), 247, 162);
 
     // 4. DISTANCE (Center X = 343)
     ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px monospace';
+    ctx.font = 'bold 18px monospace';
     ctx.textAlign = 'center';
     const distText = Math.round(this.currentDist || 0) + ' m';
-    ctx.fillText(distText, 343, 160);
+    ctx.fillText(distText, 343, 162);
 
     ctx.shadowBlur = 0;
     obj.texture.needsUpdate = true;

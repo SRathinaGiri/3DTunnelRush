@@ -10,14 +10,14 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   
-  <title>3D Tunnel Rush PWA - v4.12.0</title>
+  <title>3D Tunnel Rush PWA - v4.13.0</title>
 <!-- PWA Manifest & Favicon -->
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="apple-touch-icon" href="./assets/favicon.svg">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="./css/styles.css?v=4.12.0">
+  <link rel="stylesheet" href="./css/styles.css?v=4.13.0">
 
   <!-- Three.js Engine (Local Self-Contained PWA Dependency) -->
   <script src="./js/lib/three.min.js"></script>
@@ -33,7 +33,7 @@
           <path d="M12 6v12M6 12h12" stroke="#ec4899"/>
         </svg>
         <span>3D Tunnel Rush</span>
-        <span class="version-badge" id="appVersionBadge">v4.12.0</span>
+        <span class="version-badge" id="appVersionBadge">v4.13.0</span>
       </div>
 
       <div class="header-controls">
@@ -99,23 +99,9 @@
     </main>
   </div>
 
-  <!-- PAGE 2: GAMEPLAY SCREEN PAGE (Dedicated 3D Viewport & Solid Block HUD) -->
+  <!-- PAGE 2: GAMEPLAY SCREEN PAGE (Dedicated 3D Viewport & Bottom Controls Bar) -->
   <div id="gamePage" class="page-container hidden">
     
-    <!-- Top Header Overlay Bar (Compact, minimal controls in game screen) -->
-    <header class="game-overlay-bar">
-      <div class="game-bar-left">
-        <button class="icon-btn" id="gamePauseBtn" title="Pause Game">⏸️ Pause</button>
-        <button class="icon-btn" id="gameStopBtn" title="Stop & Exit Game">⏹️ Stop</button>
-        <button class="icon-btn" id="gameBackBtn" title="Back to Settings">⬅️ Settings</button>
-      </div>
-      <div class="game-bar-right">
-        <button class="icon-btn" id="gameViewModeBtn" title="Toggle Cockpit / Chase View Mode">🎥 View: Chase</button>
-        <button class="icon-btn" id="gameGyroBtn" title="Toggle Gyroscope">📱 <span id="gameGyroBadge">Gyro: OFF</span></button>
-        <button class="icon-btn" id="gameAudioBtn" title="Toggle Audio">🔊 Sound</button>
-      </div>
-    </header>
-
     <!-- Main 3D Viewport Frame -->
     <div class="viewport-frame mode-single" id="viewportFrame">
       <div class="sbs-divider" id="sbsDivider"></div>
@@ -151,14 +137,27 @@
         </div>
       </div>
     </div>
-    </div>
 
-    <!-- MOBILE TOUCH VIRTUAL KEYPAD -->
-    <div class="virtual-keypad-2btn" id="virtualKeypad">
-      <button class="vk-btn-large" id="vkLeft">◄ LEFT</button>
-      <button class="vk-btn-large" id="vkUp">▲ UP</button>
-      <button class="vk-btn-large" id="vkDown">▼ DOWN</button>
-      <button class="vk-btn-large" id="vkRight">RIGHT ►</button>
+    <!-- UNIFIED BOTTOM CONTROL BAR (3 Icons Left, Touch Keypad Center, 3 Icons Right) -->
+    <div class="game-bottom-toolbar" id="gameBottomToolbar">
+      <div class="bottom-bar-group left-group">
+        <button class="icon-btn icon-only" id="gamePauseBtn" title="Pause Game">⏸️</button>
+        <button class="icon-btn icon-only" id="gameStopBtn" title="Stop & Exit Game">⏹️</button>
+        <button class="icon-btn icon-only" id="gameBackBtn" title="Back to Settings">⚙️</button>
+      </div>
+
+      <div class="virtual-keypad-inline" id="virtualKeypad">
+        <button class="vk-btn-large" id="vkLeft">◄ LEFT</button>
+        <button class="vk-btn-large" id="vkUp">▲ UP</button>
+        <button class="vk-btn-large" id="vkDown">▼ DOWN</button>
+        <button class="vk-btn-large" id="vkRight">RIGHT ►</button>
+      </div>
+
+      <div class="bottom-bar-group right-group">
+        <button class="icon-btn icon-only" id="gameViewModeBtn" title="Toggle View: Chase / Cockpit">🎥</button>
+        <button class="icon-btn icon-only" id="gameGyroBtn" title="Toggle Mobile Gyroscope">📱</button>
+        <button class="icon-btn icon-only" id="gameAudioBtn" title="Toggle Sound">🔊</button>
+      </div>
     </div>
 
   </div>

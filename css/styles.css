@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DESIGN SYSTEM & STYLESHEET
-   Version: v4.12.0
+   Version: v4.13.0
    ========================================================================== */
 
 .hidden {
@@ -160,15 +160,15 @@ header.app-header {
 
 /* 2D & Anaglyph Mode Viewport Class: Dynamic Square */
 .viewport-frame.mode-single {
-  width: min(94vw, min(800px, calc(100vh - 80px)));
-  height: min(94vw, min(800px, calc(100vh - 80px)));
+  width: min(96vw, min(850px, calc(100vh - 65px)));
+  height: min(96vw, min(850px, calc(100vh - 65px)));
   max-width: 100%;
 }
 
 /* Parallel & Cross-Eye 3D Viewport Class: Dynamic 2:1 Aspect Ratio */
 .viewport-frame.mode-dual {
-  width: min(98vw, min(1500px, calc((100vh - 80px) * 2)));
-  height: min(49vw, min(750px, calc(100vh - 80px)));
+  width: min(98vw, min(1600px, calc((100vh - 65px) * 2)));
+  height: min(49vw, min(800px, calc(100vh - 65px)));
   max-width: 100%;
 }
 
@@ -740,25 +740,67 @@ input[type="range"]::-webkit-slider-thumb {
   width: 100%;
 }
 
-/* Page 2: Gameplay Screen Header Overlay Bar */
-.game-overlay-bar {
+/* Page 2: Gameplay Screen Unified Bottom Controls Toolbar */
+.game-bottom-toolbar {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1050px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 16px;
+  gap: 12px;
+  padding: 6px 12px;
+  margin-top: 4px;
   background: var(--bg-card);
   backdrop-filter: blur(10px);
   border: 1px solid var(--bg-card-border);
-  border-radius: 14px;
+  border-radius: 16px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
-.game-bar-left, .game-bar-right {
+.bottom-bar-group {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.icon-btn.icon-only {
+  padding: 8px 12px;
+  font-size: 1.15rem;
+  min-width: 42px;
+  min-height: 42px;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.virtual-keypad-inline {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.virtual-keypad-inline .vk-btn-large {
+  flex: 1;
+  max-width: 130px;
+  height: 42px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  color: var(--cyan-glow);
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.virtual-keypad-inline .vk-btn-large:active {
+  background: var(--cyan-glow);
+  color: #020617;
+  transform: scale(0.95);
 }
 
 /* Solid Block HUD (Outside 3D Viewport, Zero-Parallax 3D Stereo HUD Bar) */
