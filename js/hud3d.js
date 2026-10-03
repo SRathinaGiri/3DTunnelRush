@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v4.13.0
+   Version: v4.14.0
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -74,8 +74,8 @@ export class HUD3DEngine {
     this.cockpitGroup = new THREE.Group();
     this.hudGroup.add(this.cockpitGroup);
 
-    // 1. Cockpit Glass Aura Rim (Glows Red on mine hit, Green on crystal collect at Z = -7.02)
-    const auraRimGeo = new THREE.RingGeometry(2.5, 3.5, 32);
+    // 1. Cockpit Glass Aura Rim (Glows Red on mine hit, Green on crystal collect at Z = -10.02)
+    const auraRimGeo = new THREE.RingGeometry(3.5, 4.8, 32);
     this.cockpitAuraMat = new THREE.MeshBasicMaterial({
       color: 0x00f0ff,
       side: THREE.DoubleSide,
@@ -85,13 +85,13 @@ export class HUD3DEngine {
       depthWrite: false
     });
     this.cockpitAuraMesh = new THREE.Mesh(auraRimGeo, this.cockpitAuraMat);
-    this.cockpitAuraMesh.position.set(0, 0, -7.02);
+    this.cockpitAuraMesh.position.set(0, 0, -10.02);
     this.cockpitGroup.add(this.cockpitAuraMesh);
 
-    // 2. Cockpit View Reticle & Speedometer HUD positioned at exact flight depth in scene (Z = -7.0)
+    // 2. Cockpit View Reticle & Speedometer HUD positioned deeper inside tunnel scene (Z = -10.0)
     this.cockpitHudSprite = this.createCanvasSprite(400, 200);
-    this.cockpitHudSprite.scale.set(5.0, 2.5, 1);
-    this.cockpitHudSprite.position.set(0, -0.50, -7.0);
+    this.cockpitHudSprite.scale.set(7.14, 3.57, 1);
+    this.cockpitHudSprite.position.set(0, -0.70, -10.0);
     this.cockpitGroup.add(this.cockpitHudSprite);
 
     this.cockpitAuraTimer = 0;

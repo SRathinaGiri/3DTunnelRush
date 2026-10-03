@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - USER INTERFACE & STATE MANAGER
-   Version: v4.9.0
+   Version: v4.14.0
    ========================================================================== */
 
 export class UIManager {
@@ -29,6 +29,9 @@ export class UIManager {
 
     const handler = (e) => {
       if (e) e.preventDefault();
+      if (this.app && this.app.audio) {
+        this.app.audio.ensureContext();
+      }
       actionFn();
     };
 
