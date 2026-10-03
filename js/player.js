@@ -287,20 +287,29 @@ export class PlayerShip {
       const obs = obstacles[i];
       if (obs.userData.hit) continue;
 
-      // Precise 3D Euclidean distance (removes false rectangular AABB hits!)
+      const hitDist = obs.userData.isBoss ? 2.4 : 1.45;
       const dist = this.mesh.position.distanceTo(obs.position);
-      if (dist < 1.45) {
+      if (dist < hitDist) {
         obs.userData.hit = true;
         obs.visible = false; // INSTANTLY CONSUME & VANISH RED MINE!
 
-        // Red Aura & 25% Damage
-        this.triggerAura(0xff0022, 1.0);
-        this.shield -= 25;
+        // Trigger Explosive Red/Purple Particle Burst
+        if (window.app && window.app.tunnel) {
+          window.app.tunnel.triggerParticleBurst(obs.position, obs.userData.isBoss ? 0x9900ff : 0xff0022, 30);
+        }
+
+        // Trigger Screen Shake
+        if (window.app && typeof window.app.triggerScreenShake === 'function') {
+          window.app.triggerScreenShake(obs.userData.isBoss ? 0.70 : 0.35, 0.4);
+        }
+
+        const damage = obs.userData.isBoss ? 50 : 25;
+        this.triggerAura(obs.userData.isBoss ? 0x9900ff : 0xff0022, 1.0);
+        this.shield -= damage;
 
         if (this.shield <= 0) {
           this.lives--;
           if (this.lives > 0) {
-            // Refill shield & grant 2s invulnerability window (continuous flight!)
             this.shield = 100;
             this.invulnerableTimer = 2.0;
           } else {
@@ -324,11 +333,15 @@ export class PlayerShip {
         gem.userData.collected = true;
         gem.visible = false; // INSTANTLY CONSUME & VANISH GREEN CRYSTAL!
 
-        // Green Aura (Matches Red Aura pattern, green color!)
-        this.triggerAura(0x00ff66, 1.0);
+        // Trigger Emerald/Gold Particle Burst
+        if (window.app && window.app.tunnel) {
+          window.app.tunnel.triggerParticleBurst(gem.position, gem.userData.isSuper ? 0xffcc00 : 0x00ff66, 25);
+        }
 
-        // Green Mine / Gem collection restores +25% energy (up to 100%)
-        this.shield = Math.min(100, this.shield + 25);
+        this.triggerAura(gem.userData.isSuper ? 0xffcc00 : 0x00ff66, 1.0);
+
+        const boost = gem.userData.isSuper ? 50 : 25;
+        this.shield = Math.min(100, this.shield + boost);
 
         this.gemsCollected++;
         this.gemsForExtraLife++;
@@ -340,7 +353,7 @@ export class PlayerShip {
           extraLifeGained = true;
         }
 
-        this.score += 500 * this.multiplier;
+        this.score += (gem.userData.isSuper ? 1000 : 500) * this.multiplier;
         if (onCollect) onCollect(this.score, this.multiplier, this.gemsCollected, this.gemsForExtraLife, extraLifeGained);
       }
     }

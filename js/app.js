@@ -25,6 +25,9 @@ class GameApp {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x020617);
 
+    this.shakeTimer = 0;
+    this.shakeIntensity = 0;
+
     // Subsystems
     const canvas = document.getElementById('gameCanvas');
     this.renderer = new StereoRenderEngine(canvas);
@@ -51,6 +54,11 @@ class GameApp {
     requestAnimationFrame(this.animate);
 
     window.addEventListener('resize', () => this.renderer.handleResize());
+  }
+
+  triggerScreenShake(intensity = 0.35, duration = 0.4) {
+    this.shakeIntensity = intensity;
+    this.shakeTimer = duration;
   }
 
   startGame() {
@@ -96,8 +104,8 @@ class GameApp {
     console.log(`[3D Tunnel Rush v${this.version}] Level Up! Reached Level ${newLevel} (Roller Coaster Hyper-Warp Activated)`);
     const themeName = this.tunnel.setThemeByLevel(newLevel);
     this.hud3d.showLevelUpNotice(newLevel, themeName);
-    if (this.audio && typeof this.audio.playCollectSound === 'function') {
-      this.audio.playCollectSound();
+    if (this.audio && typeof this.audio.playWarpSweepSound === 'function') {
+      this.audio.playWarpSweepSound();
     }
   }
 
@@ -146,9 +154,16 @@ class GameApp {
   }
 
   updateCamera() {
+    const delta = this.lastDelta || 0.016;
     const slope = getTunnelSlope(this.player.z);
     const shipX = (this.player.effectiveX !== undefined) ? this.player.effectiveX : this.player.x;
     const shipY = (this.player.effectiveY !== undefined) ? this.player.effectiveY : this.player.y;
+
+    // Dynamic Speed FOV Surge (75 FOV base -> up to 88 FOV during warp / top speed)
+    const warpBonus = this.player.isLevelTransitioning ? 12.0 : 0.0;
+    const speedRatio = Math.min(1.0, Math.max(0, (this.player.currentSpeed - 0.075) / 0.425));
+    const targetFOV = 75.0 + (speedRatio * 8.0) + warpBonus;
+    this.renderer.setFOV(THREE.MathUtils.lerp(this.renderer.fov, targetFOV, 0.10));
 
     if (this.viewMode === 'COCKPIT') {
       // 1ST-PERSON PILOT COCKPIT VIEW
@@ -206,8 +221,15 @@ class GameApp {
       this.renderer.mainCamera.rotation.z += bankRoll;
     }
 
+    // Screen Shake Camera Jitter
+    if (this.shakeTimer > 0) {
+      this.shakeTimer -= delta;
+      this.renderer.mainCamera.position.x += (Math.random() - 0.5) * this.shakeIntensity;
+      this.renderer.mainCamera.position.y += (Math.random() - 0.5) * this.shakeIntensity;
+    }
+
     // Sync 3D Scene HUD transform with Camera
-    if (this.hud3d) this.hud3d.updateCameraTransform(this.renderer.mainCamera, this.lastDelta || 0.016);
+    if (this.hud3d) this.hud3d.updateCameraTransform(this.renderer.mainCamera, delta);
   }
 
   animate(timestamp) {
@@ -223,8 +245,8 @@ class GameApp {
       // Update Player & Controls
       this.player.update(this.controls, delta);
 
-      // Update Procedural Tunnel & Obstacles
-      this.tunnel.update(this.player.currentSpeed, this.player.z, this.player.isLevelTransitioning);
+      // Update Procedural Tunnel, Explosions & Obstacles
+      this.tunnel.update(this.player.currentSpeed, this.player.z, this.player.isLevelTransitioning, delta);
 
       // Collisions (active during PLAYING state)
       if (this.state === 'PLAYING') {

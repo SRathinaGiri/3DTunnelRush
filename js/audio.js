@@ -11,6 +11,8 @@ class SoundEngine {
     this.bgMusicNode = null;
     this.bgMusicGain = null;
     this.isPlayingMusic = false;
+    this.consecutivePickups = 0;
+    this.lastPickupTime = 0;
   }
 
   init() {
@@ -20,10 +22,10 @@ class SoundEngine {
       if (AudioCtx) {
         this.ctx = new AudioCtx();
         this.initialized = true;
-        console.log(`[AudioEngine v4.14.0] Web Audio API initialized (state: ${this.ctx.state}).`);
+        console.log(`[AudioEngine v4.21.0] Web Audio API initialized (state: ${this.ctx.state}).`);
       }
     } catch (e) {
-      console.warn('[AudioEngine v4.14.0] Web Audio API not supported:', e);
+      console.warn('[AudioEngine v4.21.0] Web Audio API not supported:', e);
     }
   }
 
@@ -45,31 +47,74 @@ class SoundEngine {
     return this.muted;
   }
 
-  // Gem Picked Up (Pleasant Sci-Fi Arpeggio Chime)
-  playCollectSound() {
+  // Gem Picked Up (Pleasant Sci-Fi Arpeggio Chime with Pitch-Climbing Chords)
+  playCollectSound(isSuper = false) {
     this.ensureContext();
     if (this.muted || !this.ctx) return;
     try {
       const now = this.ctx.currentTime;
-      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+      if (now - this.lastPickupTime < 1.5) {
+        this.consecutivePickups++;
+      } else {
+        this.consecutivePickups = 0;
+      }
+      this.lastPickupTime = now;
 
-      notes.forEach((freq, i) => {
+      const pitchShift = 1.0 + Math.min(8, this.consecutivePickups) * 0.08;
+      const baseNotes = isSuper
+        ? [523.25, 659.25, 783.99, 1046.50, 1318.51] // Super Booster Rainbow Chord
+        : [523.25, 659.25, 783.99, 1046.50];
+
+      baseNotes.forEach((freq, i) => {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now + i * 0.04);
+        osc.type = isSuper ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(freq * pitchShift, now + i * 0.04);
 
-        gain.gain.setValueAtTime(0.18, now + i * 0.04);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.04 + 0.16);
+        gain.gain.setValueAtTime(isSuper ? 0.25 : 0.18, now + i * 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.04 + 0.18);
 
         osc.connect(gain);
         gain.connect(this.ctx.destination);
 
         osc.start(now + i * 0.04);
-        osc.stop(now + i * 0.04 + 0.16);
+        osc.stop(now + i * 0.04 + 0.18);
       });
     } catch (err) {
       console.warn('[AudioEngine] playCollectSound error:', err);
+    }
+  }
+
+  // Hyper-Warp Level Roller Coaster Sound Effect (Resonant Synth Sweep)
+  playWarpSweepSound() {
+    this.ensureContext();
+    if (this.muted || !this.ctx) return;
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const filter = this.ctx.createBiquadFilter();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(1200, now + 1.2);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(300, now);
+      filter.frequency.exponentialRampToValueAtTime(3500, now + 1.2);
+      filter.Q.value = 6;
+
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 1.2);
+    } catch (err) {
+      console.warn('[AudioEngine] playWarpSweepSound error:', err);
     }
   }
 

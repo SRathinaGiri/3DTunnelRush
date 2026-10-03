@@ -447,56 +447,102 @@ export class TunnelEngine {
     this.scene.background.setHex(0x020617);
   }
 
-  spawnObstacle(zDistance) {
+  triggerParticleBurst(position, hexColor = 0x00ff66, count = 25) {
+    const pGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const velocities = [];
+
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = position.x;
+      positions[i * 3 + 1] = position.y;
+      positions[i * 3 + 2] = position.z;
+
+      const phi = Math.random() * Math.PI * 2;
+      const theta = Math.random() * Math.PI;
+      const speed = 4.0 + Math.random() * 8.0;
+
+      velocities.push(new THREE.Vector3(
+        Math.sin(theta) * Math.cos(phi) * speed,
+        Math.sin(theta) * Math.sin(phi) * speed,
+        Math.cos(theta) * speed
+      ));
+    }
+
+    pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const pMat = new THREE.PointsMaterial({
+      color: hexColor,
+      size: 0.35,
+      transparent: true,
+      opacity: 1.0,
+      depthWrite: false
+    });
+
+    const pMesh = new THREE.Points(pGeo, pMat);
+    this.scene.add(pMesh);
+    this.particleBursts.push({
+      mesh: pMesh,
+      velocities: velocities,
+      life: 0.6,
+      maxLife: 0.6
+    });
+  }
+
+  spawnObstacle(zDistance, forceBoss = false) {
+    const isBoss = forceBoss || (Math.random() < 0.06); // 6% chance for Giant Boss Mine
     const obsGroup = new THREE.Group();
 
-    // 1. Central Core Sphere (Glowing Red Space Mine Core)
-    const coreGeo = new THREE.IcosahedronGeometry(0.9, 2);
-    const coreMat = new THREE.MeshBasicMaterial({
-      color: 0xff0044,
-      wireframe: false
-    });
-    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-    obsGroup.add(coreMesh);
+    if (isBoss) {
+      // GIANT SPIKED BOSS MINE (50% Energy Damage!)
+      const coreGeo = new THREE.IcosahedronGeometry(1.8, 2);
+      const coreMat = new THREE.MeshBasicMaterial({ color: 0x9900ff });
+      obsGroup.add(new THREE.Mesh(coreGeo, coreMat));
 
-    // 2. Wireframe Protective Shell
-    const shellGeo = new THREE.IcosahedronGeometry(1.2, 1);
-    const shellMat = new THREE.MeshBasicMaterial({
-      color: 0xff3366,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.85
-    });
-    const shellMesh = new THREE.Mesh(shellGeo, shellMat);
-    obsGroup.add(shellMesh);
+      const shellGeo = new THREE.IcosahedronGeometry(2.4, 1);
+      const shellMat = new THREE.MeshBasicMaterial({ color: 0xff0066, wireframe: true, transparent: true, opacity: 0.9 });
+      obsGroup.add(new THREE.Mesh(shellGeo, shellMat));
 
-    // 3. 6 Directional 3D Spikes
-    const spikeMat = new THREE.MeshBasicMaterial({ color: 0xff0022 });
-    const spikeDirections = [
-      { pos: [ 1.1,  0.0,  0.0], rot: [0, 0, -Math.PI / 2] },
-      { pos: [-1.1,  0.0,  0.0], rot: [0, 0,  Math.PI / 2] },
-      { pos: [ 0.0,  1.1,  0.0], rot: [0, 0, 0] },
-      { pos: [ 0.0, -1.1,  0.0], rot: [Math.PI, 0, 0] },
-      { pos: [ 0.0,  0.0,  1.1], rot: [Math.PI / 2, 0, 0] },
-      { pos: [ 0.0,  0.0, -1.1], rot: [-Math.PI / 2, 0, 0] }
-    ];
+      const spikeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+      for (let i = 0; i < 12; i++) {
+        const spike = new THREE.Mesh(new THREE.ConeGeometry(0.5, 2.2, 5), spikeMat);
+        const phi = Math.random() * Math.PI * 2;
+        const theta = Math.random() * Math.PI;
+        spike.position.set(Math.sin(theta) * Math.cos(phi) * 2.0, Math.sin(theta) * Math.sin(phi) * 2.0, Math.cos(theta) * 2.0);
+        spike.rotation.set(phi, theta, 0);
+        obsGroup.add(spike);
+      }
+    } else {
+      // Normal Red Space Mine
+      const coreGeo = new THREE.IcosahedronGeometry(0.9, 2);
+      const coreMat = new THREE.MeshBasicMaterial({ color: 0xff0044 });
+      obsGroup.add(new THREE.Mesh(coreGeo, coreMat));
 
-    spikeDirections.forEach(dir => {
-      const spikeGeo = new THREE.ConeGeometry(0.3, 1.1, 5);
-      const spikeMesh = new THREE.Mesh(spikeGeo, spikeMat);
-      spikeMesh.position.set(...dir.pos);
-      spikeMesh.rotation.set(...dir.rot);
-      obsGroup.add(spikeMesh);
-    });
+      const shellGeo = new THREE.IcosahedronGeometry(1.2, 1);
+      const shellMat = new THREE.MeshBasicMaterial({ color: 0xff3366, wireframe: true, transparent: true, opacity: 0.85 });
+      obsGroup.add(new THREE.Mesh(shellGeo, shellMat));
 
-    // 4. Outer Rotating Red Laser Ring
-    const ringGeo = new THREE.TorusGeometry(1.4, 0.07, 8, 24);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const laserRing = new THREE.Mesh(ringGeo, ringMat);
-    laserRing.name = 'laserRing';
-    obsGroup.add(laserRing);
+      const spikeMat = new THREE.MeshBasicMaterial({ color: 0xff0022 });
+      const spikeDirections = [
+        { pos: [ 1.1,  0.0,  0.0], rot: [0, 0, -Math.PI / 2] },
+        { pos: [-1.1,  0.0,  0.0], rot: [0, 0,  Math.PI / 2] },
+        { pos: [ 0.0,  1.1,  0.0], rot: [0, 0, 0] },
+        { pos: [ 0.0, -1.1,  0.0], rot: [Math.PI, 0, 0] },
+        { pos: [ 0.0,  0.0,  1.1], rot: [Math.PI / 2, 0, 0] },
+        { pos: [ 0.0,  0.0, -1.1], rot: [-Math.PI / 2, 0, 0] }
+      ];
 
-    // 3D Grid slots: trackX [-4, 4], trackY [-3.2, 0, 3.2]
+      spikeDirections.forEach(dir => {
+        const spikeMesh = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1.1, 5), spikeMat);
+        spikeMesh.position.set(...dir.pos);
+        spikeMesh.rotation.set(...dir.rot);
+        obsGroup.add(spikeMesh);
+      });
+
+      const ringGeo = new THREE.TorusGeometry(1.4, 0.07, 8, 24);
+      const laserRing = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+      laserRing.name = 'laserRing';
+      obsGroup.add(laserRing);
+    }
+
     const trackX = (Math.floor(Math.random() * 5) - 2) * 2.0;
     const ySlots = [-3.2, 0.0, 3.2];
     const trackY = ySlots[Math.floor(Math.random() * ySlots.length)];
@@ -507,51 +553,62 @@ export class TunnelEngine {
     obsGroup.position.set(center.x + trackX, center.y + trackY, zDistance);
     obsGroup.rotation.set(-slope.pitch, -slope.yaw, 0);
 
+    const isMoving = !isBoss && (Math.random() < 0.35); // 35% of normal mines oscillate!
     obsGroup.userData = {
       zPos: zDistance,
       trackX: trackX,
       trackY: trackY,
-      hit: false
+      hit: false,
+      isBoss: isBoss,
+      isMoving: isMoving,
+      moveAxis: Math.random() > 0.5 ? 'x' : 'y',
+      moveSpeed: 1.8 + Math.random() * 1.5,
+      movePhase: Math.random() * Math.PI * 2
     };
 
     this.scene.add(obsGroup);
     this.obstacles.push(obsGroup);
   }
 
-  spawnGem(zDistance) {
+  spawnGem(zDistance, forceSuper = false) {
+    const isSuper = forceSuper || (Math.random() < 0.07); // 7% chance for Hyper Crystal Super Booster (+50% Energy!)
     const gemGroup = new THREE.Group();
 
-    // 1. Faceted Emerald Crystal Core
-    const crystalGeo = new THREE.OctahedronGeometry(0.85);
-    const crystalMat = new THREE.MeshBasicMaterial({
-      color: 0x00ff66,
-      wireframe: false
-    });
-    const crystalMesh = new THREE.Mesh(crystalGeo, crystalMat);
-    crystalMesh.scale.set(0.85, 1.4, 0.85);
-    gemGroup.add(crystalMesh);
+    if (isSuper) {
+      // RARE HYPER CRYSTAL PRISM SUPER BOOSTER (+50% ENERGY REFILL)
+      const crystalGeo = new THREE.IcosahedronGeometry(1.2, 1);
+      const crystalMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+      gemGroup.add(new THREE.Mesh(crystalGeo, crystalMat));
 
-    // 2. Glowing Wireframe Emerald Shell
-    const shellGeo = new THREE.OctahedronGeometry(1.1);
-    const shellMat = new THREE.MeshBasicMaterial({
-      color: 0x34d399,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.75
-    });
-    const shellMesh = new THREE.Mesh(shellGeo, shellMat);
-    shellMesh.scale.set(0.85, 1.4, 0.85);
-    gemGroup.add(shellMesh);
+      const shellGeo = new THREE.IcosahedronGeometry(1.6, 1);
+      const shellMat = new THREE.MeshBasicMaterial({ color: 0xff00ff, wireframe: true, transparent: true, opacity: 0.9 });
+      gemGroup.add(new THREE.Mesh(shellGeo, shellMat));
 
-    // 3. Rotating Emerald Energy Halo Ring
-    const haloGeo = new THREE.TorusGeometry(1.25, 0.06, 8, 24);
-    const haloMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
-    const haloMesh = new THREE.Mesh(haloGeo, haloMat);
-    haloMesh.rotation.x = Math.PI / 3;
-    haloMesh.name = 'haloRing';
-    gemGroup.add(haloMesh);
+      const haloGeo = new THREE.TorusGeometry(1.8, 0.08, 8, 24);
+      const haloMesh = new THREE.Mesh(haloGeo, new THREE.MeshBasicMaterial({ color: 0x00ffff }));
+      haloMesh.name = 'haloRing';
+      gemGroup.add(haloMesh);
+    } else {
+      // Normal Emerald Crystal (+25% Energy)
+      const crystalGeo = new THREE.OctahedronGeometry(0.85);
+      const crystalMat = new THREE.MeshBasicMaterial({ color: 0x00ff66 });
+      const crystalMesh = new THREE.Mesh(crystalGeo, crystalMat);
+      crystalMesh.scale.set(0.85, 1.4, 0.85);
+      gemGroup.add(crystalMesh);
 
-    // 3D Grid slots: trackX [-4, 4], trackY [-3.2, 0, 3.2]
+      const shellGeo = new THREE.OctahedronGeometry(1.1);
+      const shellMat = new THREE.MeshBasicMaterial({ color: 0x34d399, wireframe: true, transparent: true, opacity: 0.75 });
+      const shellMesh = new THREE.Mesh(shellGeo, shellMat);
+      shellMesh.scale.set(0.85, 1.4, 0.85);
+      gemGroup.add(shellMesh);
+
+      const haloGeo = new THREE.TorusGeometry(1.25, 0.06, 8, 24);
+      const haloMesh = new THREE.Mesh(haloGeo, new THREE.MeshBasicMaterial({ color: 0x00ff88 }));
+      haloMesh.rotation.x = Math.PI / 3;
+      haloMesh.name = 'haloRing';
+      gemGroup.add(haloMesh);
+    }
+
     const trackX = (Math.floor(Math.random() * 5) - 2) * 2.0;
     const ySlots = [-3.2, 0.0, 3.2];
     const trackY = ySlots[Math.floor(Math.random() * ySlots.length)];
@@ -566,14 +623,63 @@ export class TunnelEngine {
       zPos: zDistance,
       trackX: trackX,
       trackY: trackY,
-      collected: false
+      collected: false,
+      isSuper: isSuper
     };
 
     this.scene.add(gemGroup);
     this.gems.push(gemGroup);
   }
 
-  update(speed, playerZ, isTransitioning = false) {
+  spawnBarrierGate(zDistance) {
+    const gateGroup = new THREE.Group();
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+    const segments = 12;
+    const openIndex = Math.floor(Math.random() * segments);
+
+    for (let i = 0; i < segments; i++) {
+      if (i === openIndex) continue; // Single passage gap!
+      const angle = (i / segments) * Math.PI * 2;
+      const arcGeo = new THREE.TorusGeometry(5.5, 0.25, 8, 8, Math.PI * 2 / segments * 0.85);
+      const arcMesh = new THREE.Mesh(arcGeo, ringMat);
+      arcMesh.rotation.z = angle;
+      gateGroup.add(arcMesh);
+    }
+
+    const center = getTunnelCenter(zDistance);
+    const slope = getTunnelSlope(zDistance);
+    gateGroup.position.set(center.x, center.y, zDistance);
+    gateGroup.rotation.set(-slope.pitch, -slope.yaw, 0);
+
+    gateGroup.userData = { zPos: zDistance, isBarrier: true };
+    this.scene.add(gateGroup);
+    this.obstacles.push(gateGroup);
+  }
+
+  update(speed, playerZ, isTransitioning = false, delta = 0.016) {
+    const now = performance.now() * 0.001;
+
+    // 0. Update Explosive Particle Bursts
+    for (let i = this.particleBursts.length - 1; i >= 0; i--) {
+      const burst = this.particleBursts[i];
+      burst.life -= delta;
+      if (burst.life <= 0) {
+        this.scene.remove(burst.mesh);
+        this.particleBursts.splice(i, 1);
+        continue;
+      }
+      const progress = burst.life / burst.maxLife;
+      burst.mesh.material.opacity = progress;
+      const positions = burst.mesh.geometry.attributes.position.array;
+      for (let p = 0; p < burst.velocities.length; p++) {
+        const vel = burst.velocities[p];
+        positions[p * 3] += vel.x * delta;
+        positions[p * 3 + 1] += vel.y * delta;
+        positions[p * 3 + 2] += vel.z * delta;
+      }
+      burst.mesh.geometry.attributes.position.needsUpdate = true;
+    }
+
     // 1. Dynamic Tunnel Wall Curved Deformation
     if (this.tunnelWallMesh && this.originalWallPositions) {
       this.tunnelWallMesh.position.z = playerZ;
@@ -645,7 +751,7 @@ export class TunnelEngine {
       this.speedLines.geometry.attributes.position.needsUpdate = true;
     }
 
-    // 4. Update Obstacles along Curve & Rotate Mines
+    // 4. Update Obstacles along Curve & Rotate / Move Mines
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obs = this.obstacles[i];
       obs.rotation.z += 0.02;
@@ -654,9 +760,15 @@ export class TunnelEngine {
 
       const zPos = obs.userData.zPos;
       const center = getTunnelCenter(zPos);
-      const slope = getTunnelSlope(zPos);
-      const trackX = obs.userData.trackX;
-      const trackY = obs.userData.trackY || -3.2;
+      let trackX = obs.userData.trackX;
+      let trackY = obs.userData.trackY || -3.2;
+
+      // Oscillating Moving Space Mines
+      if (obs.userData.isMoving) {
+        const offset = Math.sin(now * obs.userData.moveSpeed + obs.userData.movePhase) * 2.5;
+        if (obs.userData.moveAxis === 'x') trackX += offset;
+        else trackY += offset;
+      }
 
       obs.position.x = center.x + trackX;
       obs.position.y = center.y + trackY;
@@ -676,7 +788,6 @@ export class TunnelEngine {
 
       const zPos = gem.userData.zPos;
       const center = getTunnelCenter(zPos);
-      const slope = getTunnelSlope(zPos);
       const trackX = gem.userData.trackX;
       const trackY = gem.userData.trackY || -3.2;
 
@@ -706,9 +817,13 @@ export class TunnelEngine {
   reset() {
     this.obstacles.forEach(obs => this.scene.remove(obs));
     this.gems.forEach(gem => this.scene.remove(gem));
+    if (this.particleBursts) {
+      this.particleBursts.forEach(b => this.scene.remove(b.mesh));
+    }
 
     this.obstacles = [];
     this.gems = [];
+    this.particleBursts = [];
 
     // Always reset to Level 1 (Theme 1: Cyberpunk Neon) on fresh start or restart
     this.themeIndex = 0;
