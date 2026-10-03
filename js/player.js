@@ -219,8 +219,8 @@ export class PlayerShip {
     // Gentle incline pitch feedback (subtle speed sensation without steep drop!)
     const gravityMultiplier = 1.0 - slope.incline * 0.12;
 
-    // Calculate level progression bonus (speed starts at ~50 km/h and accelerates continuously over distance & levels)
-    const newLevel = 1 + Math.floor(this.distanceTraveled / 300);
+    // Calculate level progression (Theme advances every 1000 meters)
+    const newLevel = 1 + Math.floor(this.distanceTraveled / 1000);
     if (newLevel !== this.level) {
       this.level = newLevel;
       this.triggerLevelTransition();
