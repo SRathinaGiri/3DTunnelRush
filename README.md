@@ -79,6 +79,31 @@ An immersive, high-speed 3D stereoscopic tunnel rush Progressive Web App (PWA) b
 
 ---
 
+## ⚠️ Health, Comfort & Photosensitivity Notice
+
+> [!WARNING]
+> **Photosensitivity & Visual Effects Advisory**: *3D Tunnel Rush PWA* features high-speed tunnel navigation, vibrant flashing light patterns during level warp transitions (1.8x speed surges every 1,000m), and stereoscopic 3D depth separation.
+> - **Photosensitive Epilepsy**: Players prone to photosensitive seizures or visual migraines should exercise caution when playing.
+> - **Motion Sickness & Eye Comfort**: If you experience eye strain, dizziness, or virtual motion discomfort, pause the flight immediately (`P` key or `⏸️` button) and lower the **IPD (Eye Distance)** slider in settings for a softer 3D depth effect.
+
+---
+
+## ℹ️ Technical Clarifications & Rendering Architecture
+
+### 🥽 VR Headset Compatibility (Side-by-Side Stereoscopic Output)
+- **Side-by-Side (SBS) Browser Rendering**: VR compatibility operates via **Parallel 3D Side-by-Side (SBS)** WebGL viewport rendering in browser mode (ideal for Meta Quest Browser, Apple Vision Pro Safari, Pico Browser, and mobile Cardboard viewers).
+- **WebXR Distinction**: The game runs directly as a high-performance WebGL Progressive Web App inside headset browser windows; it does **not** mandate a 6-DoF WebXR room-scale VR session, allowing instant play without headset plugin downloads or native controller setup.
+
+### 🔴🔵 Anaglyph 3D Shader & Retinal Rivalry Mitigation
+- Anaglyph 3D mode uses a dedicated 2-pass matrix shader filter optimized for standard Red-Cyan 3D glasses.
+- If minor ghosting or color spill occurs on highly saturated level themes, tune the live **IPD slider** in the pause menu to adjust horizontal channel separation for your specific glasses and screen color temperature.
+
+### 📐 Dynamic Auto-Responsive Viewport Architecture
+- The WebGL rendering engine (`js/renderer.js`) features **100% dynamic viewport auto-scaling** based on real-time element bounds and `window.devicePixelRatio`.
+- Viewports dynamically adapt to mobile portrait, ultra-compact mobile landscape (reclaiming 90%+ vertical screen space), high-refresh desktop monitors, and VR browser windows up to 4K+ resolutions without static pixel locks.
+
+---
+
 ## 🎮 Controls Summary
 
 | Control Action | Keyboard | Touch / Mobile / VR |
