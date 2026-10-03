@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - WEB AUDIO SYNTHESIZER
-   Version: v4.24.0
+   Version: v4.26.0
    ========================================================================== */
 
 class SoundEngine {
@@ -22,10 +22,10 @@ class SoundEngine {
       if (AudioCtx) {
         this.ctx = new AudioCtx();
         this.initialized = true;
-        console.log(`[AudioEngine v4.24.0] Web Audio API initialized (state: ${this.ctx.state}).`);
+        console.log(`[AudioEngine v4.26.0] Web Audio API initialized (state: ${this.ctx.state}).`);
       }
     } catch (e) {
-      console.warn('[AudioEngine v4.24.0] Web Audio API not supported:', e);
+      console.warn('[AudioEngine v4.26.0] Web Audio API not supported:', e);
     }
   }
 

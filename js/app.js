@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.25.0
+   Version: v4.26.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.25.0';
+    this.version = '4.26.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -32,6 +32,7 @@ class GameApp {
     const canvas = document.getElementById('gameCanvas');
     const gamePage = document.getElementById('gamePage') || canvas;
     this.renderer = new StereoRenderEngine(canvas);
+    this.scene.add(this.renderer.cameraGroup);
     this.tunnel = new TunnelEngine(this.scene);
     this.player = new PlayerShip(this.scene);
     this.controls = new ControlsHandler();
@@ -206,23 +207,27 @@ class GameApp {
     const targetFOV = 75.0 + (speedRatio * 8.0) + warpBonus;
     this.renderer.setFOV(THREE.MathUtils.lerp(this.renderer.fov, targetFOV, 0.10));
 
+    // Reset local mainCamera transform relative to cameraGroup
+    this.renderer.mainCamera.position.set(0, 0, 0);
+    this.renderer.mainCamera.rotation.set(0, 0, 0);
+
     if (this.viewMode === 'COCKPIT') {
       // 1ST-PERSON PILOT COCKPIT VIEW
       const shipCenter = getTunnelCenter(this.player.z);
       const lookZ = this.player.z - 25.0;
       const lookCenter = getTunnelCenter(lookZ);
 
-      // Camera positioned inside the pilot cockpit window
+      // Camera group positioned inside the pilot cockpit window
       const camX = shipCenter.x + shipX;
       const camY = shipCenter.y + shipY + 0.35; // Pilot eye height
       const camZ = this.player.z - 0.2;         // In front of ship origin
 
-      this.renderer.mainCamera.position.set(camX, camY, camZ);
+      this.renderer.cameraGroup.position.set(camX, camY, camZ);
 
-      // Aim camera straight down the curved tunnel ahead with steering tilt reaction
+      // Aim camera group straight down the curved tunnel ahead with steering tilt reaction
       const lookX = lookCenter.x + shipX + (this.player.tiltZ * -2.0);
       const lookY = lookCenter.y + shipY + (this.player.tiltX * 2.0);
-      this.renderer.mainCamera.lookAt(new THREE.Vector3(lookX, lookY, lookZ));
+      this.renderer.cameraGroup.lookAt(new THREE.Vector3(lookX, lookY, lookZ));
 
       // Roll bank with flight inclination & steering roll
       let bankRoll = (-slope.dx * 0.35) - (this.player.tiltZ * 0.45);
@@ -230,7 +235,7 @@ class GameApp {
         const transitionTime = 3.5 - this.player.transitionTimer;
         bankRoll += Math.sin(transitionTime * 6.5) * 0.25;
       }
-      this.renderer.mainCamera.rotation.z += bankRoll;
+      this.renderer.cameraGroup.rotation.z += bankRoll;
 
       // In Cockpit View, hide exterior ship mesh and show 3D pilot cockpit frame & crosshair reticle
       if (this.player.mesh) this.player.mesh.visible = false;
@@ -248,25 +253,25 @@ class GameApp {
 
       const camX = camCenter.x + (shipX * 0.70);
       const camY = camCenter.y + (shipY * 0.70) + 0.9;
-      this.renderer.mainCamera.position.set(camX, camY, camZ);
+      this.renderer.cameraGroup.position.set(camX, camY, camZ);
 
       const lookX = lookCenter.x + (shipX * 0.85);
       const lookY = lookCenter.y + (shipY * 0.85) + 0.2;
-      this.renderer.mainCamera.lookAt(new THREE.Vector3(lookX, lookY, lookZ));
+      this.renderer.cameraGroup.lookAt(new THREE.Vector3(lookX, lookY, lookZ));
 
       let bankRoll = (-slope.dx * 0.30) - (this.player.tiltZ * 0.35);
       if (this.player.isLevelTransitioning) {
         const transitionTime = 3.5 - this.player.transitionTimer;
         bankRoll += Math.sin(transitionTime * 6.5) * 0.22;
       }
-      this.renderer.mainCamera.rotation.z += bankRoll;
+      this.renderer.cameraGroup.rotation.z += bankRoll;
     }
 
     // Screen Shake Camera Jitter
     if (this.shakeTimer > 0) {
       this.shakeTimer -= delta;
-      this.renderer.mainCamera.position.x += (Math.random() - 0.5) * this.shakeIntensity;
-      this.renderer.mainCamera.position.y += (Math.random() - 0.5) * this.shakeIntensity;
+      this.renderer.cameraGroup.position.x += (Math.random() - 0.5) * this.shakeIntensity;
+      this.renderer.cameraGroup.position.y += (Math.random() - 0.5) * this.shakeIntensity;
     }
 
     // Sync 3D Scene HUD transform with Camera
@@ -281,6 +286,11 @@ class GameApp {
     this.lastDelta = delta;
 
     if (this.state === 'PLAYING' || this.state === 'WARMUP') {
+      // Poll WebXR VR Controllers (Meta Quest Touch Controllers & Triggers)
+      if (this.controls && typeof this.controls.pollWebXRControllers === 'function') {
+        this.controls.pollWebXRControllers(this.renderer);
+      }
+
       // Update Player & Controls
       this.player.update(this.controls, delta);
 
@@ -340,12 +350,14 @@ class GameApp {
       // Idle view on menu screen (Following tunnel curve at z=8.5)
       const center = getTunnelCenter(8.5);
       const slope = getTunnelSlope(8.5);
-      this.renderer.mainCamera.position.set(center.x, center.y - 1.8, 8.5);
-      this.renderer.mainCamera.rotation.set(-slope.pitch, -slope.yaw, 0);
+      this.renderer.cameraGroup.position.set(center.x, center.y - 1.8, 8.5);
+      this.renderer.cameraGroup.rotation.set(-slope.pitch, -slope.yaw, 0);
+      this.renderer.mainCamera.position.set(0, 0, 0);
+      this.renderer.mainCamera.rotation.set(0, 0, 0);
       this.hud3d.updateCameraTransform(this.renderer.mainCamera);
     }
 
-    // Render Scene with active Stereoscopic mode (2D, Parallel, Cross, Anaglyph)
+    // Render Scene with active Stereoscopic mode (2D, Parallel, Cross, Anaglyph, HSBS, or WebXR)
     this.renderer.render(this.scene);
   }
 

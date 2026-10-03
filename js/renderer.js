@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - STEREOSCOPIC 3D RENDER ENGINE (STEREO.JS ARCHITECTURE)
-   Version: v4.25.0
+   Version: v4.26.0
    ========================================================================== */
 
 export class StereoRenderEngine {
@@ -26,15 +26,21 @@ export class StereoRenderEngine {
     this.swapEyes = false;
     this.fov = 75;
 
-    // Cameras
+    // Cameras & WebXR Camera Rig Group (Dolly)
+    this.cameraGroup = new THREE.Group();
+
     this.mainCamera = new THREE.PerspectiveCamera(this.fov, 1, 0.1, 1000);
     this.mainCamera.rotation.order = 'YXZ';
-    this.mainCamera.rotation.set(0, 0, 0); // Locked facing straight forward down -Z
+    this.mainCamera.rotation.set(0, 0, 0);
 
     this.cameraL = new THREE.PerspectiveCamera(this.fov, 1, 0.1, 1000);
     this.cameraR = new THREE.PerspectiveCamera(this.fov, 1, 0.1, 1000);
     this.cameraL.rotation.order = 'YXZ';
     this.cameraR.rotation.order = 'YXZ';
+
+    this.cameraGroup.add(this.mainCamera);
+    this.cameraGroup.add(this.cameraL);
+    this.cameraGroup.add(this.cameraR);
 
     // Callbacks
     this.onModeChange = null;

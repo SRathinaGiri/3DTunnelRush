@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY INPUT & CONTROLS HANDLER (KEYBOARD, TOUCH, GYRO)
-   Version: v4.24.0
+   Version: v4.26.0
    ========================================================================== */
 
 export class ControlsHandler {
@@ -397,6 +397,60 @@ export class ControlsHandler {
 
   bindCanvasTouchSwipe(element) {
     this.bindScreenTouchControls(element);
+  }
+
+  pollWebXRControllers(renderer) {
+    if (!renderer || !renderer.renderer || !renderer.renderer.xr || !renderer.renderer.xr.isPresenting) return;
+    const session = renderer.renderer.xr.getSession();
+    if (!session || !session.inputSources) return;
+
+    let left = false;
+    let right = false;
+    let up = false;
+    let down = false;
+
+    for (const source of session.inputSources) {
+      if (source && source.gamepad) {
+        const gp = source.gamepad;
+        const axes = gp.axes || [];
+
+        // Meta Quest Touch Controller Thumbstick Mapping:
+        // axes[2] or axes[0]: Thumbstick X (-1 Left, +1 Right)
+        // axes[3] or axes[1]: Thumbstick Y (-1 Up, +1 Down)
+        let axisX = 0;
+        let axisY = 0;
+        if (axes.length >= 4 && (Math.abs(axes[2]) > 0.05 || Math.abs(axes[3]) > 0.05)) {
+          axisX = axes[2];
+          axisY = axes[3];
+        } else if (axes.length >= 2) {
+          axisX = axes[0];
+          axisY = axes[1];
+        }
+
+        const deadzone = 0.22;
+        if (axisX < -deadzone) left = true;
+        if (axisX > deadzone) right = true;
+        if (axisY < -deadzone) up = true;    // Pushing thumbstick UP
+        if (axisY > deadzone) down = true;  // Pushing thumbstick DOWN
+
+        // Quest Controller Index Triggers (Button 0) & Grip Triggers (Button 1)
+        if (gp.buttons) {
+          if (gp.buttons[0] && gp.buttons[0].pressed) {
+            if (source.handedness === 'left') left = true;
+            if (source.handedness === 'right') right = true;
+          }
+          if (gp.buttons[1] && gp.buttons[1].pressed) {
+            if (source.handedness === 'left') left = true;
+            if (source.handedness === 'right') right = true;
+          }
+        }
+      }
+    }
+
+    if (left) this.keys.left = true;
+    if (right) this.keys.right = true;
+    if (up) this.keys.up = true;
+    if (down) this.keys.down = true;
   }
 
   reset() {
