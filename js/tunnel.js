@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DYNAMIC CURVED 3D TUNNEL & TRACK OBSTACLE ENGINE
-   Version: v4.9.8
+   Version: v4.9.9
    ========================================================================== */
 
 export function getTunnelCenter(z) {
@@ -55,7 +55,6 @@ export class TunnelEngine {
     this.tunnelRings = [];
     this.obstacles = [];
     this.gems = [];
-    this.wallBillboards = [];
     this.lightFixtures = [];
     this.speedLines = null;
     this.tunnelWallMesh = null;
@@ -65,7 +64,6 @@ export class TunnelEngine {
 
     this.nextSpawnZ = -120;
     this.nextLightZ = 0;
-    this.nextBillboardZ = -180;
 
     this.themeIndex = 0;
     this.themes = [
@@ -339,175 +337,6 @@ export class TunnelEngine {
     texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(6, 60);
     return texture;
-  }
-
-  createBillboardTexture(typeIndex) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 256;
-    const ctx = canvas.getContext('2d');
-
-    const posters = [
-      {
-        bg: '#070f26',
-        border: '#00f0ff',
-        glow: '#00f0ff',
-        title1: '🎬 NEON CITY 2099',
-        title2: 'IMAX 3D CINEMA',
-        sub: '★ NOW SHOWING IN STEREOSCOPIC 3D ★',
-        accent: '#ec4899'
-      },
-      {
-        bg: '#1a0526',
-        border: '#ec4899',
-        glow: '#ec4899',
-        title1: '🚀 3D TUNNEL RUSH',
-        title2: 'WARP DRIVE HIGHWAY',
-        sub: '⚡ MAX SPEED: 500 KM/H ⚡',
-        accent: '#f59e0b'
-      },
-      {
-        bg: '#041f1a',
-        border: '#22c55e',
-        glow: '#22c55e',
-        title1: '💎 CRYSTAL CAVERNS',
-        title2: 'RESERVE DEPOSITS',
-        sub: 'COLLECT 100 GEMS FOR EXTRA LIFE',
-        accent: '#00f0ff'
-      },
-      {
-        bg: '#240905',
-        border: '#f97316',
-        glow: '#ef4444',
-        title1: '🌋 VOLCANIC WARP',
-        title2: 'MAGMA TUNNEL ZONE',
-        sub: '⚠️ DANGER: HIGH TEMPERATURE MINES ⚠️',
-        accent: '#f59e0b'
-      }
-    ];
-
-    const poster = posters[typeIndex % posters.length];
-
-    // Dark sleek Sci-Fi Frame Background
-    ctx.fillStyle = poster.bg;
-    ctx.fillRect(0, 0, 1024, 512);
-
-    // Glowing Border Frame
-    ctx.shadowColor = poster.glow;
-    ctx.shadowBlur = 24;
-    ctx.strokeStyle = poster.border;
-    ctx.lineWidth = 16;
-    ctx.beginPath();
-    ctx.roundRect(24, 24, 976, 464, 32);
-    ctx.stroke();
-
-    // Inner bevel border
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.roundRect(48, 48, 928, 416, 24);
-    ctx.stroke();
-
-    // Poster Title (Line 1)
-    ctx.shadowColor = poster.glow;
-    ctx.shadowBlur = 18;
-    ctx.fillStyle = poster.border;
-    ctx.font = 'bold 72px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(poster.title1, 512, 170);
-
-    // Subtitle (Line 2)
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 48px sans-serif';
-    ctx.fillText(poster.title2, 512, 270);
-
-    // Bottom Badge Accent
-    ctx.fillStyle = poster.accent;
-    ctx.font = 'bold 36px monospace';
-    ctx.fillText(poster.sub, 512, 380);
-
-    ctx.shadowBlur = 0;
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    return texture;
-  }
-
-  alignBillboardToTunnel(billboardMesh, zDistance, isLeft) {
-    const center = getTunnelCenter(zDistance);
-    const pBehind = getTunnelCenter(zDistance + 1.0);
-    const pAhead  = getTunnelCenter(zDistance - 1.0);
-
-    // 1. Local Forward Tangent Vector down tunnel trajectory
-    const forward = new THREE.Vector3(
-      pAhead.x - pBehind.x,
-      pAhead.y - pBehind.y,
-      -2.0
-    ).normalize();
-
-    // 2. Local Up Vector (orthogonalized to forward vector)
-    let up = new THREE.Vector3(0, 1, 0);
-    up.sub(forward.clone().multiplyScalar(up.dot(forward))).normalize();
-
-    // 3. Local Right Vector (cross product of forward and up)
-    const right = new THREE.Vector3().crossVectors(forward, up).normalize();
-
-    // 4. Position poster 7.82 units out along local Right vector on Left or Right wall
-    const wallSide = isLeft ? -1.0 : 1.0;
-    const wallPos = new THREE.Vector3(center.x, center.y, zDistance)
-      .add(right.clone().multiplyScalar(wallSide * 7.82));
-
-    billboardMesh.position.copy(wallPos);
-
-    // 5. Basis Matrix Orientation:
-    // Poster X-axis = forward vector (along tunnel length)
-    // Poster Y-axis = up vector (along wall height)
-    // Poster Z-axis = normal vector pointing into tunnel center
-    const normal = right.clone().multiplyScalar(-wallSide);
-
-    const rotMatrix = new THREE.Matrix4();
-    rotMatrix.makeBasis(forward, up, normal);
-    billboardMesh.quaternion.setFromRotationMatrix(rotMatrix);
-  }
-
-  spawnBillboard(zDistance) {
-    const isLeft = Math.random() < 0.5;
-    const typeIndex = Math.floor(Math.random() * 4);
-    const texture = this.createBillboardTexture(typeIndex);
-
-    const geo = new THREE.PlaneGeometry(6.5, 3.25); // Proportional 6.5x3.25 Landscape Wall Poster Frame
-    const mat = new THREE.MeshBasicMaterial({
-      map: texture,
-      side: THREE.DoubleSide,
-      polygonOffset: true,
-      polygonOffsetFactor: -2.0,
-      polygonOffsetUnits: -2.0
-    });
-
-    const billboardMesh = new THREE.Mesh(geo, mat);
-    this.alignBillboardToTunnel(billboardMesh, zDistance, isLeft);
-
-    billboardMesh.userData = {
-      zPos: zDistance,
-      isLeft: isLeft
-    };
-
-    this.scene.add(billboardMesh);
-    this.wallBillboards.push(billboardMesh);
-  }
-
-  trySpawnBillboard(startZ) {
-    // Only spawn billboards on straight tunnel sections (curvature < 0.14)
-    // where the wall is flat and straight, ensuring 100% perfect rectangular posters.
-    for (let offset = 0; offset <= 120; offset += 10) {
-      const targetZ = startZ - offset;
-      if (getTunnelCurvature(targetZ) < 0.14) {
-        this.spawnBillboard(targetZ);
-        return targetZ;
-      }
-    }
-    return startZ;
   }
 
   initTunnelGeometry() {
@@ -849,21 +678,7 @@ export class TunnelEngine {
       }
     }
 
-    // 6. Update Wall Billboards along Dynamic Tunnel Curve using Basis Matrix Alignment
-    for (let i = this.wallBillboards.length - 1; i >= 0; i--) {
-      const b = this.wallBillboards[i];
-      const zPos = b.userData.zPos;
-      const isLeft = b.userData.isLeft;
-
-      this.alignBillboardToTunnel(b, zPos, isLeft);
-
-      if (b.position.z > playerZ + 30) {
-        this.scene.remove(b);
-        this.wallBillboards.splice(i, 1);
-      }
-    }
-
-    // 7. Infinite Dynamic Procedural Spawning Ahead of Player (SUPPRESSED during level warp transition!)
+    // 6. Infinite Dynamic Procedural Spawning Ahead of Player (SUPPRESSED during level warp transition!)
     while (this.nextSpawnZ > playerZ - 1200) {
       if (!isTransitioning) {
         if (Math.random() > 0.30) {
@@ -875,23 +690,14 @@ export class TunnelEngine {
       }
       this.nextSpawnZ -= 38;
     }
-
-    while (this.nextBillboardZ > playerZ - 1200) {
-      if (!isTransitioning) {
-        this.trySpawnBillboard(this.nextBillboardZ);
-      }
-      this.nextBillboardZ -= (180 + Math.random() * 70); // Infrequent 180m-250m interval
-    }
   }
 
   reset() {
     this.obstacles.forEach(obs => this.scene.remove(obs));
     this.gems.forEach(gem => this.scene.remove(gem));
-    this.wallBillboards.forEach(b => this.scene.remove(b));
 
     this.obstacles = [];
     this.gems = [];
-    this.wallBillboards = [];
 
     this.nextSpawnZ = -120;
     while (this.nextSpawnZ > -1200) {
@@ -902,12 +708,6 @@ export class TunnelEngine {
         this.spawnGem(this.nextSpawnZ - 18);
       }
       this.nextSpawnZ -= 38;
-    }
-
-    this.nextBillboardZ = -180;
-    while (this.nextBillboardZ > -1200) {
-      this.trySpawnBillboard(this.nextBillboardZ);
-      this.nextBillboardZ -= (180 + Math.random() * 70);
     }
   }
 }

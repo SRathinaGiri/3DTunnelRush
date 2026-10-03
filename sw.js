@@ -1,5 +1,5 @@
 // Service Worker for 3D Tunnel Rush PWA
-const CACHE_VERSION = 'tunnel-rush-v4.9.8';
+const CACHE_VERSION = 'tunnel-rush-v4.9.9';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
