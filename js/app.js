@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.24.0
+   Version: v4.25.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.24.0';
+    this.version = '4.25.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -44,17 +44,52 @@ class GameApp {
     this.controls.bindScreenTouchControls(gamePage);
     this.controls.onPauseToggle = () => this.togglePause();
 
+    // Check & setup WebXR Immersive VR Session for Meta Quest & VR headsets
+    this.setupWebXR();
+
     // Register Service Worker for PWA Offline functionality & Internet Update Awareness
     this.registerServiceWorker();
 
-    // Initial render setup & loop launch
+    // Initial render setup & loop launch via Three.js setAnimationLoop (WebXR compatible)
     this.player.reset();
     this.tunnel.reset();
     this.ui.showMenuPage();
     this.animate = this.animate.bind(this);
-    requestAnimationFrame(this.animate);
+    this.renderer.renderer.setAnimationLoop(this.animate);
 
     window.addEventListener('resize', () => this.renderer.handleResize());
+  }
+
+  setupWebXR() {
+    if (typeof navigator !== 'undefined' && 'xr' in navigator) {
+      navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+        if (supported) {
+          console.log(`[3D Tunnel Rush v${this.version}] WebXR Immersive VR supported on this headset!`);
+          const vrBtnHeader = document.getElementById('webxrHeaderBtn');
+          const vrBtnMenu = document.getElementById('webxrMenuBtn');
+          if (vrBtnHeader) vrBtnHeader.style.display = 'inline-flex';
+          if (vrBtnMenu) vrBtnMenu.style.display = 'inline-flex';
+
+          const enterVR = async () => {
+            try {
+              const session = await navigator.xr.requestSession('immersive-vr', {
+                optionalFeatures: ['local-floor', 'bounded-floor']
+              });
+              await this.renderer.renderer.xr.setSession(session);
+              console.log(`[3D Tunnel Rush v${this.version}] Entered WebXR Immersive VR Session.`);
+              if (this.state === 'MENU') {
+                this.startGame();
+              }
+            } catch (err) {
+              console.warn('[3D Tunnel Rush] WebXR request session error:', err);
+            }
+          };
+
+          if (vrBtnHeader) vrBtnHeader.addEventListener('click', enterVR);
+          if (vrBtnMenu) vrBtnMenu.addEventListener('click', enterVR);
+        }
+      }).catch(err => console.warn('[3D Tunnel Rush] WebXR check error:', err));
+    }
   }
 
   triggerScreenShake(intensity = 0.35, duration = 0.4) {
@@ -239,8 +274,6 @@ class GameApp {
   }
 
   animate(timestamp) {
-    requestAnimationFrame(this.animate);
-
     if (!this.lastTime) this.lastTime = timestamp || performance.now();
     const rawDelta = (timestamp - this.lastTime) / 1000.0;
     this.lastTime = timestamp || performance.now();
