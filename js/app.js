@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.19.0
+   Version: v4.20.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.19.0';
+    this.version = '4.20.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -207,13 +207,17 @@ class GameApp {
     }
 
     // Sync 3D Scene HUD transform with Camera
-    if (this.hud3d) this.hud3d.updateCameraTransform(this.renderer.mainCamera, 0.016);
+    if (this.hud3d) this.hud3d.updateCameraTransform(this.renderer.mainCamera, this.lastDelta || 0.016);
   }
 
   animate(timestamp) {
     requestAnimationFrame(this.animate);
 
-    const delta = 0.016;
+    if (!this.lastTime) this.lastTime = timestamp || performance.now();
+    const rawDelta = (timestamp - this.lastTime) / 1000.0;
+    this.lastTime = timestamp || performance.now();
+    const delta = Math.min(Math.max(rawDelta, 0.001), 0.05);
+    this.lastDelta = delta;
 
     if (this.state === 'PLAYING' || this.state === 'WARMUP') {
       // Update Player & Controls
