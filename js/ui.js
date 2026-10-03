@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - USER INTERFACE & STATE MANAGER
-   Version: v4.14.0
+   Version: v4.16.0
    ========================================================================== */
 
 export class UIManager {
@@ -21,6 +21,9 @@ export class UIManager {
 
     this.bindControls();
     this.bindSliders();
+    
+    // Load persistent user configuration from localStorage
+    setTimeout(() => this.loadSettings(), 50);
   }
 
   bindAction(elementId, actionFn) {
@@ -183,6 +186,7 @@ export class UIManager {
         }
 
         this.app.renderer.setMode(selectedMode);
+        this.saveSettings();
       };
       btn.addEventListener('click', switchMode);
       btn.addEventListener('touchstart', switchMode, { passive: false });
@@ -198,6 +202,7 @@ export class UIManager {
         const val = parseFloat(e.target.value);
         if (eyeVal) eyeVal.textContent = val.toFixed(3);
         this.app.renderer.setEyeDistance(val);
+        this.saveSettings();
       });
     }
 
@@ -209,6 +214,7 @@ export class UIManager {
         const val = parseFloat(e.target.value);
         if (focalVal) focalVal.textContent = val.toFixed(1);
         this.app.renderer.setFocalLength(val);
+        this.saveSettings();
       });
     }
 
@@ -219,6 +225,7 @@ export class UIManager {
         if (e) e.preventDefault();
         this.app.renderer.swapEyes = !this.app.renderer.swapEyes;
         swapBtn.classList.toggle('active');
+        this.saveSettings();
       };
       swapBtn.addEventListener('click', toggleSwap);
       swapBtn.addEventListener('touchstart', toggleSwap, { passive: false });
@@ -346,6 +353,103 @@ export class UIManager {
       btn2.title = (mode === 'COCKPIT') ? 'View: Cockpit' : 'View: Chase';
       if (mode === 'COCKPIT') btn2.classList.add('active');
       else btn2.classList.remove('active');
+    }
+    this.saveSettings();
+  }
+
+  saveSettings() {
+    try {
+      const settings = {
+        mode: this.app.renderer.mode,
+        eyeDistance: this.app.renderer.eyeDistance,
+        focalLength: this.app.renderer.focalLength,
+        swapEyes: !!this.app.renderer.swapEyes,
+        viewMode: this.app.viewMode,
+        soundMuted: !!this.app.audio.muted,
+        gyroEnabled: !!(this.app.controls && this.app.controls.gyroEnabled),
+        userSpeed: this.app.player ? this.app.player.baseSpeed : 0.075
+      };
+      localStorage.setItem('3d_tunnel_rush_settings', JSON.stringify(settings));
+    } catch (e) {
+      console.warn('[UIManager] Failed to save settings:', e);
+    }
+  }
+
+  loadSettings() {
+    try {
+      const saved = localStorage.getItem('3d_tunnel_rush_settings');
+      if (!saved) return;
+      const settings = JSON.parse(saved);
+
+      // 1. Stereo Mode (2d / parallel / cross / anaglyph)
+      if (settings.mode) {
+        const modeBtns = document.querySelectorAll('.mode-btn');
+        modeBtns.forEach(btn => {
+          if (btn.dataset.mode === settings.mode) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+        this.app.renderer.setMode(settings.mode);
+      }
+
+      // 2. Eye Distance Slider (IPD)
+      if (settings.eyeDistance !== undefined) {
+        const eyeSlider = document.getElementById('eyeDistSlider');
+        const eyeVal = document.getElementById('eyeDistVal');
+        if (eyeSlider) eyeSlider.value = settings.eyeDistance;
+        if (eyeVal) eyeVal.textContent = parseFloat(settings.eyeDistance).toFixed(3);
+        this.app.renderer.setEyeDistance(settings.eyeDistance);
+      }
+
+      // 3. Focal Length Slider
+      if (settings.focalLength !== undefined) {
+        const focalSlider = document.getElementById('focalSlider');
+        const focalVal = document.getElementById('focalVal');
+        if (focalSlider) focalSlider.value = settings.focalLength;
+        if (focalVal) focalVal.textContent = parseFloat(settings.focalLength).toFixed(1);
+        this.app.renderer.setFocalLength(settings.focalLength);
+      }
+
+      // 4. Swap Eyes Toggle
+      if (settings.swapEyes !== undefined) {
+        this.app.renderer.swapEyes = settings.swapEyes;
+        const swapBtn = document.getElementById('swapEyesBtn');
+        if (swapBtn) {
+          if (settings.swapEyes) swapBtn.classList.add('active');
+          else swapBtn.classList.remove('active');
+        }
+      }
+
+      // 5. View Mode (CHASE / COCKPIT)
+      if (settings.viewMode) {
+        this.app.viewMode = settings.viewMode;
+        this.updateViewModeUI(settings.viewMode);
+      }
+
+      // 6. Sound Muted State
+      if (settings.soundMuted !== undefined && this.app.audio.muted !== settings.soundMuted) {
+        const isMuted = this.app.audio.toggleMute();
+        const btn1 = document.getElementById('audioToggle');
+        const btn2 = document.getElementById('gameAudioBtn');
+        if (btn1) btn1.textContent = isMuted ? '🔇 Muted' : '🔊 Sound';
+        if (btn2) {
+          btn2.textContent = isMuted ? '🔇' : '🔊';
+          btn2.title = isMuted ? 'Sound: Muted' : 'Sound: ON';
+          if (isMuted) btn2.classList.add('active');
+          else btn2.classList.remove('active');
+        }
+      }
+
+      // 7. Flight Base Speed
+      if (settings.userSpeed !== undefined && this.app.player) {
+        this.app.player.setUserSpeed(settings.userSpeed);
+      }
+
+      console.log('[UIManager] Restored persistent settings:', settings);
+    } catch (e) {
+      console.warn('[UIManager] Failed to load settings:', e);
     }
   }
 }

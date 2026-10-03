@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - STEREOSCOPIC 3D RENDER ENGINE (STEREO.JS ARCHITECTURE)
-   Version: v4.15.0
+   Version: v4.16.0
    ========================================================================== */
 
 export class StereoRenderEngine {
@@ -150,18 +150,23 @@ export class StereoRenderEngine {
     } else if (this.mode === 'anaglyph') {
       this.renderer.setViewport(0, 0, width, height);
       this.renderer.setScissor(0, 0, width, height);
+
+      const origAutoClear = this.renderer.autoClear;
+      this.renderer.autoClear = false;
       this.renderer.clear();
 
-      // Left Eye -> Red Channel
+      // Left Eye -> Red Channel Pass
       this.renderer.colorMask(true, false, false, true);
       this.renderer.render(scene, leftCam);
 
-      // Right Eye -> Cyan Channel
+      // Right Eye -> Cyan Channel Pass (Green + Blue)
       this.renderer.clearDepth();
       this.renderer.colorMask(false, true, true, true);
       this.renderer.render(scene, rightCam);
 
+      // Restore color mask & original autoClear state
       this.renderer.colorMask(true, true, true, true);
+      this.renderer.autoClear = origAutoClear;
     }
 
     this.renderer.setScissorTest(false);

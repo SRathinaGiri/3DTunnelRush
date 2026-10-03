@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DYNAMIC CURVED 3D TUNNEL & TRACK OBSTACLE ENGINE
-   Version: v4.15.0
+   Version: v4.16.0
    ========================================================================== */
 
 export function getTunnelCenter(z) {
@@ -698,6 +698,10 @@ export class TunnelEngine {
 
     this.obstacles = [];
     this.gems = [];
+
+    // Always reset to Level 1 (Theme 1: Cyberpunk Neon) on fresh start or restart
+    this.themeIndex = 0;
+    this.setThemeByLevel(1);
 
     this.nextSpawnZ = -120;
     while (this.nextSpawnZ > -1200) {

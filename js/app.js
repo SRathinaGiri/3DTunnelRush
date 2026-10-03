@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.15.0
+   Version: v4.16.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.15.0';
+    this.version = '4.16.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -44,6 +44,7 @@ class GameApp {
     this.registerServiceWorker();
 
     // Initial render setup & loop launch
+    this.player.reset();
     this.tunnel.reset();
     this.ui.showMenuPage();
     this.animate = this.animate.bind(this);
@@ -62,8 +63,10 @@ class GameApp {
       this.swRegistration.update();
     }
 
+    // Reset player, tunnel, and force Theme 1 (Cyberpunk Neon) on every start / restart
     this.player.reset();
     this.tunnel.reset();
+    this.tunnel.setThemeByLevel(1);
     this.controls.reset();
     this.ui.showGamePage();
 
