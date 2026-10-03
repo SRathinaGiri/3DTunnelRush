@@ -1,6 +1,6 @@
 # 🚀 3D Tunnel Rush PWA (Stereoscopic 3D Game)
 
-[![Version](https://img.shields.io/badge/version-v4.20.0-00f0ff.svg)](./manifest.json)
+[![Version](https://img.shields.io/badge/version-v4.22.0-00f0ff.svg)](./manifest.json)
 [![PWA Ready](https://img.shields.io/badge/PWA-100%25%20Offline-ec4899.svg)](./sw.js)
 [![WebGL](https://img.shields.io/badge/Three.js-WebGL%203D-a855f7.svg)](./js/renderer.js)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
@@ -8,6 +8,26 @@
 🌐 **Live Playable Demo**: [srathinagiri.github.io/3DTunnelRush](https://srathinagiri.github.io/3DTunnelRush/)
 
 An immersive, high-speed 3D stereoscopic tunnel rush Progressive Web App (PWA) built with **Three.js**, **WebGL**, and the **Web Audio API**. Relax your eyes, pop on 3D glasses or a VR headset, and maneuver your spacecraft through dynamic 3D roller-coaster tunnels, dodging spiked red space mines and collecting glowing emerald crystals!
+
+---
+
+## 🎬 Gameplay Demos & 3D Screenshots
+
+| 🎥 Parallel 3D View Video | 🎥 Cross-Eye 3D View Video |
+| :---: | :---: |
+| [▶️ Watch Parallel 3D Demo Video](./assets/pview3dtunnel.mp4) | [▶️ Watch Cross-Eye 3D Demo Video](./assets/xview3dtunnel.mp4) |
+
+### 📸 Screenshot Gallery
+
+<p align="center">
+  <img src="./assets/3DTunnel01.jpg" width="48%" alt="3D Tunnel Rush Gameplay 1" />
+  <img src="./assets/3DTunnel02.jpg" width="48%" alt="3D Tunnel Rush Gameplay 2" />
+  <br>
+  <img src="./assets/3DTunnel03.jpg" width="48%" alt="3D Tunnel Rush Gameplay 3" />
+  <img src="./assets/3DTunnel04.jpg" width="48%" alt="3D Tunnel Rush Gameplay 4" />
+  <br>
+  <img src="./assets/3DTunnel05.jpg" width="97%" alt="3D Tunnel Rush Gameplay 5" />
+</p>
 
 ---
 

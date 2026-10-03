@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - USER INTERFACE & STATE MANAGER
-   Version: v4.20.0
+   Version: v4.22.0
    ========================================================================== */
 
 export class UIManager {
@@ -50,11 +50,12 @@ export class UIManager {
     // In-Game Overlay Bar Buttons
     this.bindAction('gamePauseBtn', () => this.app.togglePause());
     this.bindAction('gameStopBtn', () => this.app.stopGame());
-    this.bindAction('gameBackBtn', () => this.app.stopGame());
+    this.bindAction('gameBackBtn', () => this.app.togglePause());
 
     // Modal Buttons
     this.bindAction('restartBtn', () => this.app.restartGame());
     this.bindAction('resumeBtn', () => this.app.togglePause());
+    this.bindAction('pauseSettingsBtn', () => this.app.stopGame());
     this.bindAction('resetHighScoreBtn', () => this.resetHighScore());
 
     // Sound Mute Toggle (Shared across Menu & Game overlay)
@@ -194,29 +195,31 @@ export class UIManager {
   }
 
   bindSliders() {
-    // Eye Distance (IPD) Slider
-    const eyeSlider = document.getElementById('eyeDistSlider');
-    const eyeVal = document.getElementById('eyeDistVal');
-    if (eyeSlider) {
-      eyeSlider.addEventListener('input', (e) => {
+    // Eye Distance (IPD) Sliders (Menu & Pause modal)
+    const eyeSliders = document.querySelectorAll('#eyeDistSlider, .pause-eye-slider');
+    const eyeVals = document.querySelectorAll('#eyeDistVal, .pause-eye-val');
+    eyeSliders.forEach(slider => {
+      slider.addEventListener('input', (e) => {
         const val = parseFloat(e.target.value);
-        if (eyeVal) eyeVal.textContent = val.toFixed(3);
+        eyeSliders.forEach(s => s.value = val);
+        eyeVals.forEach(v => v.textContent = val.toFixed(3));
         this.app.renderer.setEyeDistance(val);
         this.saveSettings();
       });
-    }
+    });
 
-    // Focal Length (Convergence) Slider
-    const focalSlider = document.getElementById('focalSlider');
-    const focalVal = document.getElementById('focalVal');
-    if (focalSlider) {
-      focalSlider.addEventListener('input', (e) => {
+    // Focal Length (Convergence) Sliders (Menu & Pause modal)
+    const focalSliders = document.querySelectorAll('#focalSlider, .pause-focal-slider');
+    const focalVals = document.querySelectorAll('#focalVal, .pause-focal-val');
+    focalSliders.forEach(slider => {
+      slider.addEventListener('input', (e) => {
         const val = parseFloat(e.target.value);
-        if (focalVal) focalVal.textContent = val.toFixed(1);
+        focalSliders.forEach(s => s.value = val);
+        focalVals.forEach(v => v.textContent = val.toFixed(1));
         this.app.renderer.setFocalLength(val);
         this.saveSettings();
       });
-    }
+    });
 
     // Eye Swap Toggle Button
     const swapBtn = document.getElementById('swapEyesBtn');
@@ -396,19 +399,19 @@ export class UIManager {
 
       // 2. Eye Distance Slider (IPD)
       if (settings.eyeDistance !== undefined) {
-        const eyeSlider = document.getElementById('eyeDistSlider');
-        const eyeVal = document.getElementById('eyeDistVal');
-        if (eyeSlider) eyeSlider.value = settings.eyeDistance;
-        if (eyeVal) eyeVal.textContent = parseFloat(settings.eyeDistance).toFixed(3);
+        const eyeSliders = document.querySelectorAll('#eyeDistSlider, .pause-eye-slider');
+        const eyeVals = document.querySelectorAll('#eyeDistVal, .pause-eye-val');
+        eyeSliders.forEach(s => s.value = settings.eyeDistance);
+        eyeVals.forEach(v => v.textContent = parseFloat(settings.eyeDistance).toFixed(3));
         this.app.renderer.setEyeDistance(settings.eyeDistance);
       }
 
       // 3. Focal Length Slider
       if (settings.focalLength !== undefined) {
-        const focalSlider = document.getElementById('focalSlider');
-        const focalVal = document.getElementById('focalVal');
-        if (focalSlider) focalSlider.value = settings.focalLength;
-        if (focalVal) focalVal.textContent = parseFloat(settings.focalLength).toFixed(1);
+        const focalSliders = document.querySelectorAll('#focalSlider, .pause-focal-slider');
+        const focalVals = document.querySelectorAll('#focalVal, .pause-focal-val');
+        focalSliders.forEach(s => s.value = settings.focalLength);
+        focalVals.forEach(v => v.textContent = parseFloat(settings.focalLength).toFixed(1));
         this.app.renderer.setFocalLength(settings.focalLength);
       }
 
