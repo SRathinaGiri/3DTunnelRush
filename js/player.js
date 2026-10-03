@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY PLAYER SHIP WITH VISUAL AURAS & LIVES SYSTEM
-   Version: v4.14.0
+   Version: v4.17.0
    ========================================================================== */
 
 import { getTunnelCenter, getTunnelSlope } from './tunnel.js';
@@ -246,6 +246,24 @@ export class PlayerShip {
     this.distanceTraveled += this.currentSpeed;
     this.score += Math.round(this.currentSpeed * 30 * this.multiplier);
 
+    // Continuous Energy Depletion: 100% energy depletes over 250 meters of distance traveled
+    const energyDepletion = (this.currentSpeed / 250.0) * 100.0;
+    this.shield = Math.max(0, this.shield - energyDepletion);
+
+    if (this.shield <= 0 && this.invulnerableTimer <= 0 && !this.isLevelTransitioning) {
+      this.lives--;
+      this.triggerAura(0xff0022, 1.0);
+      if (this.lives > 0) {
+        this.shield = 100;
+        this.invulnerableTimer = 2.0;
+      } else {
+        this.shield = 0;
+      }
+      if (window.app && typeof window.app.onPlayerHit === 'function') {
+        window.app.onPlayerHit(this.shield, this.lives);
+      }
+    }
+
     // 7. Direct User Navigation Position (Zero centrifugal drift - craft always 100% in view!)
     const center = getTunnelCenter(this.z);
 
@@ -308,6 +326,9 @@ export class PlayerShip {
 
         // Green Aura (Matches Red Aura pattern, green color!)
         this.triggerAura(0x00ff66, 1.0);
+
+        // Green Mine / Gem collection restores +10% energy (up to 100%)
+        this.shield = Math.min(100, this.shield + 10);
 
         this.gemsCollected++;
         this.gemsForExtraLife++;

@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - STEREOSCOPIC 3D RENDER ENGINE (STEREO.JS ARCHITECTURE)
-   Version: v4.16.0
+   Version: v4.17.0
    ========================================================================== */
 
 export class StereoRenderEngine {
@@ -35,6 +35,49 @@ export class StereoRenderEngine {
 
     // Callbacks
     this.onModeChange = null;
+
+    // Anaglyph 3D Render Targets & Composite Pipeline
+    this.renderTargetL = new THREE.WebGLRenderTarget(500, 500, {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat
+    });
+    this.renderTargetR = new THREE.WebGLRenderTarget(500, 500, {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat
+    });
+
+    this.anaglyphMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        mapLeft: { value: null },
+        mapRight: { value: null }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D mapLeft;
+        uniform sampler2D mapRight;
+        varying vec2 vUv;
+        void main() {
+          vec4 colorL = texture2D(mapLeft, vUv);
+          vec4 colorR = texture2D(mapRight, vUv);
+          gl_FragColor = vec4(colorL.r, colorR.g, colorR.b, max(colorL.a, colorR.a));
+        }
+      `,
+      depthTest: false,
+      depthWrite: false
+    });
+
+    this.anaglyphScene = new THREE.Scene();
+    this.anaglyphCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const quadMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.anaglyphMaterial);
+    this.anaglyphScene.add(quadMesh);
   }
 
   setMode(newMode) {
@@ -148,25 +191,26 @@ export class StereoRenderEngine {
       this.renderer.setScissor(rightX, 0, halfWidth, height);
       this.renderer.render(scene, rightCam);
     } else if (this.mode === 'anaglyph') {
-      this.renderer.setViewport(0, 0, width, height);
-      this.renderer.setScissor(0, 0, width, height);
-
-      const origAutoClear = this.renderer.autoClear;
-      this.renderer.autoClear = false;
+      // 1. Render Left Eye Pass into RenderTarget L
+      this.renderer.setRenderTarget(this.renderTargetL);
       this.renderer.clear();
-
-      // Left Eye -> Red Channel Pass
-      this.renderer.colorMask(true, false, false, true);
       this.renderer.render(scene, leftCam);
 
-      // Right Eye -> Cyan Channel Pass (Green + Blue)
-      this.renderer.clearDepth();
-      this.renderer.colorMask(false, true, true, true);
+      // 2. Render Right Eye Pass into RenderTarget R
+      this.renderer.setRenderTarget(this.renderTargetR);
+      this.renderer.clear();
       this.renderer.render(scene, rightCam);
 
-      // Restore color mask & original autoClear state
-      this.renderer.colorMask(true, true, true, true);
-      this.renderer.autoClear = origAutoClear;
+      // 3. Composite Pass -> Output Red/Cyan 3D Shader onto Canvas
+      this.renderer.setRenderTarget(null);
+      this.renderer.setViewport(0, 0, width, height);
+      this.renderer.setScissor(0, 0, width, height);
+      this.renderer.clear();
+
+      this.anaglyphMaterial.uniforms.mapLeft.value = this.renderTargetL.texture;
+      this.anaglyphMaterial.uniforms.mapRight.value = this.renderTargetR.texture;
+
+      this.renderer.render(this.anaglyphScene, this.anaglyphCamera);
     }
 
     this.renderer.setScissorTest(false);
@@ -207,5 +251,10 @@ export class StereoRenderEngine {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.renderer.setPixelRatio(dpr);
     this.renderer.setSize(frameW, frameH, false);
+
+    const targetW = Math.max(1, Math.round(frameW * dpr));
+    const targetH = Math.max(1, Math.round(frameH * dpr));
+    if (this.renderTargetL) this.renderTargetL.setSize(targetW, targetH);
+    if (this.renderTargetR) this.renderTargetR.setSize(targetW, targetH);
   }
 }
