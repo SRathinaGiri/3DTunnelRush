@@ -10,15 +10,14 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   
-  <title>3D Tunnel Rush PWA - v4.11.0</title>
-
-  <!-- PWA Manifest & Favicon -->
+  <title>3D Tunnel Rush PWA - v4.12.0</title>
+<!-- PWA Manifest & Favicon -->
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="apple-touch-icon" href="./assets/favicon.svg">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="./css/styles.css?v=4.11.0">
+  <link rel="stylesheet" href="./css/styles.css?v=4.12.0">
 
   <!-- Three.js Engine (Local Self-Contained PWA Dependency) -->
   <script src="./js/lib/three.min.js"></script>
@@ -34,7 +33,7 @@
           <path d="M12 6v12M6 12h12" stroke="#ec4899"/>
         </svg>
         <span>3D Tunnel Rush</span>
-        <span class="version-badge" id="appVersionBadge">v4.11.0</span>
+        <span class="version-badge" id="appVersionBadge">v4.12.0</span>
       </div>
 
       <div class="header-controls">
@@ -152,72 +151,6 @@
         </div>
       </div>
     </div>
-
-    <!-- SOLID BLOCK HUD (Outside 3D Viewport, Zero-Parallax 3D Stereo HUD Bar) -->
-    <div class="solid-block-hud" id="solidBlockHud">
-      <!-- Left Eye / Single HUD Block -->
-      <div class="hud-block-half" id="hudBlockLeft">
-        <div class="hud-block-item">
-          <span class="hud-label">SCORE</span>
-          <span class="hud-val-bold cyan" id="hudScoreVal">000000</span>
-        </div>
-        <div class="hud-block-item">
-          <span class="hud-label">DIST</span>
-          <span class="hud-val" id="hudDistVal">0m</span>
-        </div>
-        <div class="hud-block-item">
-          <span class="hud-label">SPEED</span>
-          <span class="hud-val cyan" id="hudSpeedVal">⚡ 60</span>
-        </div>
-        <div class="hud-block-item">
-          <span class="hud-label">SHIELD</span>
-          <span class="hud-val pink" id="hudShieldVal">100%</span>
-        </div>
-        <div class="hud-block-item">
-          <span class="hud-label">MULT</span>
-          <span class="hud-val amber" id="hudMultVal">x1</span>
-        </div>
-        <div class="hud-block-item">
-          <span class="hud-label">LIVES</span>
-          <span class="hud-val pink" id="hudLivesVal">❤️❤️❤️</span>
-        </div>
-        <div class="hud-block-item">
-          <span class="hud-label">THEME</span>
-          <span class="hud-val purple" id="hudLevelVal">L1: Cyber</span>
-        </div>
-      </div>
-
-      <!-- Right Eye HUD Block (Activated in Parallel/Cross-Eye 3D for 0-Parallax Stereo Score) -->
-      <div class="hud-block-half hud-right-eye hidden" id="hudBlockRight">
-        <div class="hud-block-item">
-          <span class="hud-label">SCORE</span>
-          <span class="hud-val-bold cyan" id="hudScoreValR">000000</span>
-        </div>
-        <div class="hud-block-item">
-          <span class="hud-label">DIST</span>
-          <span class="hud-val" id="hudDistValR">0m</span>
-        </div>
-        <div class="hud-block-item">
-          <span class="hud-label">SPEED</span>
-          <span class="hud-val cyan" id="hudSpeedValR">⚡ 60</span>
-        </div>
-        <div class="hud-block-item">
-          <span class="hud-label">SHIELD</span>
-          <span class="hud-val pink" id="hudShieldValR">100%</span>
-        </div>
-        <div class="hud-block-item">
-          <span class="hud-label">MULT</span>
-          <span class="hud-val amber" id="hudMultValR">x1</span>
-        </div>
-        <div class="hud-block-item">
-          <span class="hud-label">LIVES</span>
-          <span class="hud-val pink" id="hudLivesValR">❤️❤️❤️</span>
-        </div>
-        <div class="hud-block-item">
-          <span class="hud-label">THEME</span>
-          <span class="hud-val purple" id="hudLevelValR">L1: Cyber</span>
-        </div>
-      </div>
     </div>
 
     <!-- MOBILE TOUCH VIRTUAL KEYPAD -->

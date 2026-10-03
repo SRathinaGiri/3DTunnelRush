@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DESIGN SYSTEM & STYLESHEET
-   Version: v1.0.1
+   Version: v4.12.0
    ========================================================================== */
 
 .hidden {
@@ -160,15 +160,15 @@ header.app-header {
 
 /* 2D & Anaglyph Mode Viewport Class: Dynamic Square */
 .viewport-frame.mode-single {
-  width: min(90vw, min(650px, calc(100vh - 240px)));
-  height: min(90vw, min(650px, calc(100vh - 240px)));
+  width: min(94vw, min(800px, calc(100vh - 80px)));
+  height: min(94vw, min(800px, calc(100vh - 80px)));
   max-width: 100%;
 }
 
 /* Parallel & Cross-Eye 3D Viewport Class: Dynamic 2:1 Aspect Ratio */
 .viewport-frame.mode-dual {
-  width: min(96vw, min(1300px, calc((100vh - 240px) * 2)));
-  height: min(48vw, min(650px, calc(100vh - 240px)));
+  width: min(98vw, min(1500px, calc((100vh - 80px) * 2)));
+  height: min(49vw, min(750px, calc(100vh - 80px)));
   max-width: 100%;
 }
 
