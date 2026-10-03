@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.16.0';
+    this.version = '4.19.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -331,7 +331,7 @@ class GameApp {
       });
 
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=4.9.4').then((reg) => {
+        navigator.serviceWorker.register(`./sw.js?v=${this.version}`).then((reg) => {
           console.log(`[SW v${this.version}] Registered successfully with scope:`, reg.scope);
           this.swRegistration = reg;
 
