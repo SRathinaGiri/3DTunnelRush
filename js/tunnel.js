@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - DYNAMIC CURVED 3D TUNNEL & TRACK OBSTACLE ENGINE
-   Version: v4.9.9
+   Version: v4.10.0
    ========================================================================== */
 
 export function getTunnelCenter(z) {

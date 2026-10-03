@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v4.9.9
+   Version: v4.10.0
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -45,12 +45,14 @@ export class HUD3DEngine {
   }
 
   initHUD() {
-    // 1. In-canvas 3D HUD Sprite rendered inside 3D Scene with 0 parallax stereo depth
-    this.topHudSprite = this.createCanvasSprite(500, 140);
-    this.topHudSprite.scale.set(3.1, 0.868, 1);
-    this.topHudSprite.position.set(0, 1.85, -3.5);
-    this.topHudSprite.visible = false;
-    this.hudGroup.add(this.topHudSprite);
+    // 1. Single Compact One-Line 3D HUD Panel positioned at the bottom center of camera view
+    this.bottomHudSprite = this.createCanvasSprite(600, 60);
+    this.bottomHudSprite.scale.set(3.2, 0.32, 1);
+    this.bottomHudSprite.position.set(0, -1.65, -3.5); // Bottom center of view frustum
+    this.bottomHudSprite.visible = true;
+    this.hudGroup.add(this.bottomHudSprite);
+
+    this.topHudSprite = this.bottomHudSprite; // Backward compatibility alias
 
     // 2. High Score Banner (Positioned at top of viewport during menus/warmup)
     this.highScoreSprite = this.createCanvasSprite(400, 60);
@@ -116,14 +118,14 @@ export class HUD3DEngine {
   setCockpitVisible(visible) {
     this.isCockpitView = visible;
     if (this.cockpitGroup) {
-      // Reticle hidden permanently; cockpitGroup visible only during hit/collect aura flashes
       this.cockpitGroup.visible = visible;
     }
     if (this.cockpitReticleSprite) {
       this.cockpitReticleSprite.visible = false;
     }
-    if (this.topHudSprite) {
-      this.topHudSprite.visible = false;
+    if (this.bottomHudSprite) {
+      // 1-Line Bottom HUD panel shown in BOTH views (Chase and Cockpit)
+      this.bottomHudSprite.visible = true;
     }
   }
 
@@ -154,14 +156,14 @@ export class HUD3DEngine {
   updateScore(score, dist) {
     this.currentScore = score;
     this.currentDist = dist;
-    this.renderTopHud();
+    this.renderBottomHud();
   }
 
   updateStats(speedStr, shieldStr, multStr) {
     this.currentSpeedStr = speedStr;
     this.currentShieldStr = shieldStr;
     this.currentMultStr = multStr;
-    this.renderTopHud();
+    this.renderBottomHud();
   }
 
   updateHUD(score, dist, speedStr, shieldStr, multStr, lives, gemsForExtraLife) {
@@ -178,88 +180,99 @@ export class HUD3DEngine {
     this.currentLives = lives !== undefined ? lives : 3;
     this.currentGemsForExtraLife = gemsForExtraLife || 0;
 
-    const distStr = roundedDist + 'm';
-    this.renderCockpitTelemetry(this.currentSpeedStr, this.currentShieldStr, distStr);
-
-    // Keep 3D floating top HUD hidden per user directive for clean viewport in Chase View
-    if (this.topHudSprite) this.topHudSprite.visible = false;
+    this.renderBottomHud();
+    if (this.bottomHudSprite) this.bottomHudSprite.visible = true;
   }
 
   renderTopHud() {
-    const obj = this.topHudSprite.userData;
-    const ctx = obj.ctx;
-    ctx.clearRect(0, 0, 500, 140);
+    this.renderBottomHud();
+  }
 
-    // Transparent Floating Sci-Fi Glass Panel
-    ctx.fillStyle = 'rgba(2, 6, 23, 0.25)';
+  renderBottomHud() {
+    if (!this.bottomHudSprite) return;
+    const obj = this.bottomHudSprite.userData;
+    const ctx = obj.ctx;
+    ctx.clearRect(0, 0, 600, 60);
+
+    // Sleek Single-Line Pill Background Container
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.65)';
     ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.roundRect(6, 6, 488, 128, 16);
+    ctx.roundRect(8, 6, 584, 48, 24);
     ctx.fill();
     ctx.stroke();
 
-    // Subtle section dividers
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
+    // Subtle Vertical Column Dividers for 4 Columns
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.30)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    // Vertical dividers
-    ctx.moveTo(155, 12); ctx.lineTo(155, 128);
-    ctx.moveTo(345, 12); ctx.lineTo(345, 128);
-    // Horizontal divider across center section
-    ctx.moveTo(155, 70); ctx.lineTo(345, 70);
+    ctx.moveTo(150, 12); ctx.lineTo(150, 48);
+    ctx.moveTo(300, 12); ctx.lineTo(300, 48);
+    ctx.moveTo(450, 12); ctx.lineTo(450, 48);
     ctx.stroke();
 
-    // Enable glowing text shadows for weightless floating effect
-    ctx.shadowColor = 'rgba(0, 240, 255, 0.7)';
     ctx.shadowBlur = 6;
 
-    // 1. Left Section: Score & Gems Counter
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 12px sans-serif';
-    ctx.fillText('SCORE', 18, 28);
+    // =========================================================================
+    // EXACTLY 4 KPIs ONLY IN ONE SINGLE LINE (NO LABELS):
+    // 1. SPEED (e.g. 75 km/h)
+    // 2. 3 HEARTS (e.g. ❤️ ❤️ ❤️)
+    // 3. ENERGY LEVEL (100% & 75% green, 50% yellow, 25% red)
+    // 4. DISTANCE IN METERS (e.g. 1235 m)
+    // =========================================================================
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 24px monospace';
-    ctx.fillText((this.currentScore || 0).toString(), 18, 58);
-
-    ctx.fillStyle = '#00ff66';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.fillText(`💎 ${this.currentGemsForExtraLife || 0}/100`, 18, 106);
-
-    // 2. Center Section: Lives, Shield, Speed, Multiplier
-    ctx.textAlign = 'center';
-
-    // Top row: Lives & Shield
-    ctx.font = 'bold 17px sans-serif';
-    ctx.fillStyle = '#ff0055';
-    ctx.fillText(`❤️ ${this.currentLives !== undefined ? this.currentLives : 3}`, 200, 44);
-
-    ctx.fillStyle = '#ec4899';
-    ctx.fillText(`🛡️ ${this.currentShieldStr || '100%'}`, 300, 44);
-
-    // Bottom row: Speed & Boost Multiplier
-    ctx.font = 'bold 16px sans-serif';
+    // 1. KPI 1: SPEED (Center X = 79)
+    ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
     ctx.fillStyle = '#00f0ff';
-    ctx.fillText(this.currentSpeedStr || '40 km/h', 215, 104);
+    ctx.font = 'bold 22px monospace';
+    ctx.textAlign = 'center';
+    const cleanSpeed = (this.currentSpeedStr || '40 km/h').toLowerCase();
+    ctx.fillText(cleanSpeed, 79, 38);
 
-    ctx.fillStyle = '#f59e0b';
-    ctx.fillText('🔥 ' + (this.currentMultStr || 'x1'), 305, 104);
+    // 2. KPI 2: LIVES / HEARTS (Center X = 225)
+    ctx.shadowColor = 'rgba(239, 68, 68, 0.8)';
+    const lives = this.currentLives !== undefined ? this.currentLives : 3;
+    let heartsText = '';
+    if (lives >= 3) heartsText = '❤️ ❤️ ❤️';
+    else if (lives === 2) heartsText = '❤️ ❤️ 🖤';
+    else if (lives === 1) heartsText = '❤️ 🖤 🖤';
+    else heartsText = '🖤 🖤 🖤';
 
-    // 3. Right Section: Distance
-    ctx.textAlign = 'right';
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 12px sans-serif';
-    ctx.fillText('DISTANCE', 482, 28);
+    ctx.fillStyle = '#ff0055';
+    ctx.font = 'bold 19px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(heartsText, 225, 37);
 
+    // 3. KPI 3: ENERGY LEVEL (Center X = 375)
+    // 100% & 75% -> Green, 50% -> Yellow, 25% or lower -> Red
+    const rawShield = parseInt(this.currentShieldStr || '100', 10);
+    const energyVal = isNaN(rawShield) ? 100 : rawShield;
+    let energyColor = '#22c55e'; // Green
+    let energyGlow = 'rgba(34, 197, 94, 0.8)';
+    if (energyVal <= 30) {
+      energyColor = '#ef4444'; // Red
+      energyGlow = 'rgba(239, 68, 68, 0.8)';
+    } else if (energyVal <= 60) {
+      energyColor = '#f59e0b'; // Yellow
+      energyGlow = 'rgba(245, 158, 11, 0.8)';
+    }
+
+    ctx.shadowColor = energyGlow;
+    ctx.fillStyle = energyColor;
+    ctx.font = 'bold 22px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText((this.currentShieldStr || '100%'), 375, 38);
+
+    // 4. KPI 4: DISTANCE IN METERS (Center X = 525)
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 24px monospace';
-    ctx.fillText(Math.round(this.currentDist || 0) + 'm', 482, 58);
+    ctx.font = 'bold 22px monospace';
+    ctx.textAlign = 'center';
+    const distText = Math.round(this.currentDist || 0) + ' m';
+    ctx.fillText(distText, 525, 38);
 
-    // Reset shadow
     ctx.shadowBlur = 0;
-
     obj.texture.needsUpdate = true;
   }
 
