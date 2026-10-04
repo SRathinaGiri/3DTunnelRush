@@ -1,6 +1,6 @@
 # 🚀 3D Tunnel Rush PWA (Stereoscopic 3D Game)
 
-[![Version](https://img.shields.io/badge/version-v4.28.0-00f0ff.svg)](./manifest.json)
+[![Version](https://img.shields.io/badge/version-v4.29.0-00f0ff.svg)](./manifest.json)
 [![PWA Ready](https://img.shields.io/badge/PWA-100%25%20Offline-ec4899.svg)](./sw.js)
 [![WebGL](https://img.shields.io/badge/Three.js-WebGL%203D-a855f7.svg)](./js/renderer.js)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)

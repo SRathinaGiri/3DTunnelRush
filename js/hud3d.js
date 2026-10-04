@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v4.28.0
+   Version: v4.29.0
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -106,8 +106,9 @@ export class HUD3DEngine {
 
   setCockpitVisible(visible) {
     this.isCockpitView = visible;
+    const isVR = !!(window.app && window.app.renderer && window.app.renderer.renderer && window.app.renderer.renderer.xr && window.app.renderer.renderer.xr.isPresenting);
     if (this.cockpitGroup) {
-      this.cockpitGroup.visible = visible;
+      this.cockpitGroup.visible = visible || isVR;
     }
   }
 
@@ -120,10 +121,17 @@ export class HUD3DEngine {
   }
 
   updateCameraTransform(camera, delta = 0.016) {
-    // Always anchor HUD transform to mainCamera to maintain crossed front-of-screen stereo parallax
+    // Fetch world position & quaternion of active camera (including WebXR VR headset pose)
     const targetCam = (window.app && window.app.renderer && window.app.renderer.mainCamera) ? window.app.renderer.mainCamera : camera;
-    this.hudGroup.position.copy(targetCam.position);
-    this.hudGroup.quaternion.copy(targetCam.quaternion);
+    if (targetCam) {
+      targetCam.getWorldPosition(this.hudGroup.position);
+      targetCam.getWorldQuaternion(this.hudGroup.quaternion);
+    }
+
+    const isVR = !!(window.app && window.app.renderer && window.app.renderer.renderer && window.app.renderer.renderer.xr && window.app.renderer.renderer.xr.isPresenting);
+    if (this.cockpitGroup && isVR) {
+      this.cockpitGroup.visible = true;
+    }
 
     if (this.cockpitAuraTimer > 0) {
       this.cockpitAuraTimer -= delta;
@@ -267,34 +275,43 @@ export class HUD3DEngine {
     const ctx = obj.ctx;
     ctx.clearRect(0, 0, 400, 200);
 
-    // Top Section: 50% Transparent Cockpit Sightline Reticle Box & Crosshair
+    // 1. Top Section: Live Score Display Banner
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = 'rgba(0, 240, 255, 0.9)';
+    ctx.fillStyle = '#00f0ff';
+    ctx.font = 'bold 18px monospace';
+    ctx.textAlign = 'center';
+    const scoreStr = 'SCORE: ' + (this.currentScore || 0).toString().padStart(6, '0');
+    ctx.fillText(scoreStr, 200, 24);
+
+    // 2. Center Section: 50% Transparent Cockpit Sightline Reticle Box & Crosshair
     ctx.strokeStyle = 'rgba(0, 240, 255, 0.50)';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.roundRect(140, 10, 120, 70, 10);
+    ctx.roundRect(140, 35, 120, 65, 10);
     ctx.stroke();
 
     // Corner Bracket Accent Ticks (50% transparent)
     ctx.strokeStyle = 'rgba(0, 240, 255, 0.50)';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(130, 25); ctx.lineTo(130, 5); ctx.lineTo(155, 5);
-    ctx.moveTo(270, 25); ctx.lineTo(270, 5); ctx.lineTo(245, 5);
-    ctx.moveTo(130, 65); ctx.lineTo(130, 85); ctx.lineTo(155, 85);
-    ctx.moveTo(270, 65); ctx.lineTo(270, 85); ctx.lineTo(245, 85);
+    ctx.moveTo(130, 48); ctx.lineTo(130, 30); ctx.lineTo(155, 30);
+    ctx.moveTo(270, 48); ctx.lineTo(270, 30); ctx.lineTo(245, 30);
+    ctx.moveTo(130, 85); ctx.lineTo(130, 105); ctx.lineTo(155, 105);
+    ctx.moveTo(270, 85); ctx.lineTo(270, 105); ctx.lineTo(245, 105);
     ctx.stroke();
 
-    // Crosshair Ticks (50% transparent)
-    ctx.strokeStyle = 'rgba(236, 72, 153, 0.50)';
+    // Crosshair Ticks (65% transparent pink)
+    ctx.strokeStyle = 'rgba(236, 72, 153, 0.65)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(200, 25); ctx.lineTo(200, 40);
-    ctx.moveTo(200, 50); ctx.lineTo(200, 65);
-    ctx.moveTo(165, 45); ctx.lineTo(185, 45);
-    ctx.moveTo(215, 45); ctx.lineTo(235, 45);
+    ctx.moveTo(200, 48); ctx.lineTo(200, 60);
+    ctx.moveTo(200, 75); ctx.lineTo(200, 88);
+    ctx.moveTo(165, 67); ctx.lineTo(185, 67);
+    ctx.moveTo(215, 67); ctx.lineTo(235, 67);
     ctx.stroke();
 
-    // Bottom Section: 90% Opaque 4-KPI Telemetry Strip
+    // 3. Bottom Section: 90% Opaque 4-KPI Telemetry Strip
     ctx.fillStyle = 'rgba(2, 6, 23, 0.90)';
     ctx.strokeStyle = 'rgba(0, 240, 255, 0.65)';
     ctx.lineWidth = 1.5;

@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY INPUT & CONTROLS HANDLER (KEYBOARD, TOUCH, GYRO)
-   Version: v4.28.0
+   Version: v4.29.0
    ========================================================================== */
 
 export class ControlsHandler {
@@ -449,7 +449,14 @@ export class ControlsHandler {
         // Action Buttons A/B/X/Y or Thumbstick Click
         if ((buttons[2] && buttons[2].pressed) || (buttons[3] && buttons[3].pressed) || (buttons[4] && buttons[4].pressed)) {
           vrActionPressed = true;
+          // Toggle View Mode (Chase / Cockpit) on Button 4 (B or Y button) press
+          if (buttons[4] && buttons[4].pressed && !this.lastBtn4State) {
+            if (window.app && typeof window.app.toggleViewMode === 'function') {
+              window.app.toggleViewMode();
+            }
+          }
         }
+        this.lastBtn4State = (buttons[4] && buttons[4].pressed);
       }
     }
 
