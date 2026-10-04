@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.30.0
+   Version: v4.31.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.30.0';
+    this.version = '4.31.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -236,7 +236,7 @@ class GameApp {
       const lookZ = this.player.z - 25.0; // Target look-ahead position down -Z
       const lookCenter = getTunnelCenter(lookZ);
 
-      // In VR Cockpit Mode: position camera group inside pilot canopy behind controls (camZ = player.z + 0.65, camY = shipCenter.y + shipY + 0.50)
+      // In VR Cockpit Mode: position camera group inside pilot canopy (camZ = player.z + 0.65, camY = shipCenter.y + shipY + 0.50)
       // In 2D Cockpit Mode: position camera group at camZ = player.z - 0.2
       const camX = shipCenter.x + shipX;
       const camY = shipCenter.y + shipY + (isVR ? 0.50 : 0.35);
@@ -249,59 +249,59 @@ class GameApp {
       const lookY = lookCenter.y + shipY + (this.player.tiltX * 1.5);
       const lookPos = new THREE.Vector3(lookX, lookY, lookZ);
 
-      if (isVR) {
-        // In WebXR Immersive VR, lock cameraGroup forward direction cleanly down negative Z flight path
-        const forwardDir = new THREE.Vector3().subVectors(lookPos, camPos).normalize();
-        if (forwardDir.lengthSq() > 0.0001) {
-          this.renderer.cameraGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), forwardDir);
-        }
-      } else {
-        this.renderer.cameraGroup.lookAt(lookPos);
+      // Point cameraGroup local negative Z axis directly down the flight path (forwardDir)
+      const forwardDir = new THREE.Vector3().subVectors(lookPos, camPos).normalize();
+      if (forwardDir.lengthSq() > 0.0001) {
+        this.renderer.cameraGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), forwardDir);
+      }
+
+      if (!isVR) {
         let bankRoll = (-slope.dx * 0.35) - (this.player.tiltZ * 0.45);
         if (this.player.isLevelTransitioning) {
           const transitionTime = 3.5 - this.player.transitionTimer;
           bankRoll += Math.sin(transitionTime * 6.5) * 0.25;
         }
-        this.renderer.cameraGroup.rotation.z += bankRoll;
+        const rollQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), bankRoll);
+        this.renderer.cameraGroup.quaternion.multiply(rollQuat);
       }
 
       // Ship Mesh Visibility: Keep ship model visible in VR so pilot sees ship nose & wings ahead
       if (this.player.mesh) this.player.mesh.visible = true;
       if (this.hud3d) this.hud3d.setCockpitVisible(true);
     } else {
-      // 3RD-PERSON CHASE CAMERA VIEW (Supports both 2D/3D screen & WebXR VR!)
+      // 3RD-PERSON CHASE CAMERA VIEW (Supports 2D, Parallel, Cross-Eye, Anaglyph, HSBS & WebXR VR!)
       if (this.player.mesh) this.player.mesh.visible = true;
       if (this.hud3d) this.hud3d.setCockpitVisible(false);
 
-      // In VR Chase Mode: position camera 8.5m behind player ship in depth (camZ = player.z + 8.5)
-      const camZ = this.player.z + (isVR ? 8.5 : 7.0);
+      const camZ = this.player.z + (isVR ? 7.5 : 7.0);
       const lookZ = this.player.z - 3.0;
 
       const camCenter = getTunnelCenter(camZ);
       const lookCenter = getTunnelCenter(lookZ);
 
-      const camX = camCenter.x + shipX;
-      const camY = camCenter.y + shipY + (isVR ? 1.5 : 0.9);
+      const camX = camCenter.x + (shipX * (isVR ? 1.0 : 0.70));
+      const camY = camCenter.y + (shipY * (isVR ? 1.0 : 0.70)) + (isVR ? 1.4 : 0.9);
       this.renderer.cameraGroup.position.set(camX, camY, camZ);
 
-      const lookX = lookCenter.x + shipX;
-      const lookY = lookCenter.y + shipY + 0.2;
+      const lookX = lookCenter.x + (shipX * (isVR ? 1.0 : 0.85));
+      const lookY = lookCenter.y + (shipY * (isVR ? 1.0 : 0.85)) + 0.2;
       const camPos = new THREE.Vector3(camX, camY, camZ);
       const lookPos = new THREE.Vector3(lookX, lookY, lookZ);
 
-      if (isVR) {
-        const forwardDir = new THREE.Vector3().subVectors(lookPos, camPos).normalize();
-        if (forwardDir.lengthSq() > 0.0001) {
-          this.renderer.cameraGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), forwardDir);
-        }
-      } else {
-        this.renderer.cameraGroup.lookAt(lookPos);
+      // Point cameraGroup local negative Z axis directly down the flight path (forwardDir)
+      const forwardDir = new THREE.Vector3().subVectors(lookPos, camPos).normalize();
+      if (forwardDir.lengthSq() > 0.0001) {
+        this.renderer.cameraGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), forwardDir);
+      }
+
+      if (!isVR) {
         let bankRoll = (-slope.dx * 0.30) - (this.player.tiltZ * 0.35);
         if (this.player.isLevelTransitioning) {
           const transitionTime = 3.5 - this.player.transitionTimer;
           bankRoll += Math.sin(transitionTime * 6.5) * 0.22;
         }
-        this.renderer.cameraGroup.rotation.z += bankRoll;
+        const rollQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), bankRoll);
+        this.renderer.cameraGroup.quaternion.multiply(rollQuat);
       }
     }
 
