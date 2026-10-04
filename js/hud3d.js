@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v4.31.0
+   Version: v4.32.0
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -98,6 +98,27 @@ export class HUD3DEngine {
     this.cockpitAuraMaxDuration = 1.0;
     this.isCockpitView = false;
     this.cockpitGroup.visible = false;
+    this.lastIsVR = null;
+  }
+
+  applyCockpitTransform(isVR) {
+    if (!this.cockpitHudSprite || !this.cockpitAuraMesh) return;
+    if (this.lastIsVR === isVR) return;
+    this.lastIsVR = isVR;
+
+    if (isVR) {
+      // Quest 3 WebXR VR Mode: close-range stereo HUD anchored in VR space
+      this.cockpitHudSprite.position.set(0, -0.35, -3.5);
+      this.cockpitHudSprite.scale.set(2.5, 1.25, 1);
+      this.cockpitAuraMesh.position.set(0, 0, -3.52);
+      this.cockpitAuraMesh.scale.set(1.0, 1.0, 1.0);
+    } else {
+      // 2D & Non-VR 3D Modes (Parallel, Cross-Eye, Anaglyph, Smart Glasses HSBS): deep tunnel focal placement (v4.25.0)
+      this.cockpitHudSprite.position.set(0, -0.70, -10.0);
+      this.cockpitHudSprite.scale.set(7.14, 3.57, 1);
+      this.cockpitAuraMesh.position.set(0, 0, -10.05);
+      this.cockpitAuraMesh.scale.set(1.4, 1.4, 1.0);
+    }
   }
 
   renderCockpitTelemetry(speedStr, shieldStr, distStr) {
@@ -107,6 +128,7 @@ export class HUD3DEngine {
   setCockpitVisible(visible) {
     this.isCockpitView = visible;
     const isVR = !!(window.app && window.app.renderer && window.app.renderer.renderer && window.app.renderer.renderer.xr && window.app.renderer.renderer.xr.isPresenting);
+    this.applyCockpitTransform(isVR);
     if (this.cockpitGroup) {
       this.cockpitGroup.visible = visible || isVR;
     }
@@ -129,6 +151,8 @@ export class HUD3DEngine {
     }
 
     const isVR = !!(window.app && window.app.renderer && window.app.renderer.renderer && window.app.renderer.renderer.xr && window.app.renderer.renderer.xr.isPresenting);
+    this.applyCockpitTransform(isVR);
+
     if (this.cockpitGroup && isVR) {
       this.cockpitGroup.visible = true;
     }

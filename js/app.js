@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.31.0
+   Version: v4.32.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.31.0';
+    this.version = '4.32.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -265,8 +265,9 @@ class GameApp {
         this.renderer.cameraGroup.quaternion.multiply(rollQuat);
       }
 
-      // Ship Mesh Visibility: Keep ship model visible in VR so pilot sees ship nose & wings ahead
-      if (this.player.mesh) this.player.mesh.visible = true;
+      // Ship Mesh Visibility: Keep ship model visible in VR so pilot sees ship nose & wings ahead.
+      // In non-VR Cockpit view, hide exterior ship model so it does not obstruct windshield or reticle.
+      if (this.player.mesh) this.player.mesh.visible = isVR;
       if (this.hud3d) this.hud3d.setCockpitVisible(true);
     } else {
       // 3RD-PERSON CHASE CAMERA VIEW (Supports 2D, Parallel, Cross-Eye, Anaglyph, HSBS & WebXR VR!)
