@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 100% SCENE-BASED STEREOSCOPIC 3D HUD ENGINE
-   Version: v4.29.0
+   Version: v4.30.0
    ========================================================================== */
 
 export class HUD3DEngine {
@@ -415,7 +415,7 @@ export class HUD3DEngine {
     this.lastBoostSecStr = secStr;
 
     const obj = this.boostNoticeSprite.userData;
-    obj.userData.isEnergyBoost = true;
+    if (obj) obj.isEnergyBoost = true;
     obj.ctx.clearRect(0, 0, 500, 70);
 
     obj.ctx.fillStyle = 'rgba(2, 6, 23, 0.35)';
@@ -441,13 +441,15 @@ export class HUD3DEngine {
 
   hideEnergyBoostNotice() {
     this.lastBoostSecStr = '';
-    this.boostNoticeSprite.userData.isEnergyBoost = false;
+    if (this.boostNoticeSprite && this.boostNoticeSprite.userData) {
+      this.boostNoticeSprite.userData.isEnergyBoost = false;
+    }
     this.boostNoticeSprite.visible = false;
   }
 
   showExtraLifeNotice() {
     const obj = this.boostNoticeSprite.userData;
-    obj.userData.isEnergyBoost = false;
+    if (obj) obj.isEnergyBoost = false;
     obj.ctx.clearRect(0, 0, 500, 70);
 
     obj.ctx.fillStyle = 'rgba(2, 6, 23, 0.40)';
@@ -478,7 +480,7 @@ export class HUD3DEngine {
 
   showLevelUpNotice(level, themeName) {
     const obj = this.boostNoticeSprite.userData;
-    obj.userData.isEnergyBoost = false;
+    if (obj) obj.isEnergyBoost = false;
     obj.ctx.clearRect(0, 0, 500, 70);
 
     obj.ctx.fillStyle = 'rgba(2, 6, 23, 0.45)';

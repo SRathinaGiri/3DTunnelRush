@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.29.0
+   Version: v4.30.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.29.0';
+    this.version = '4.30.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -151,10 +151,16 @@ class GameApp {
 
   onLevelUp(newLevel) {
     console.log(`[3D Tunnel Rush v${this.version}] Level Up! Reached Level ${newLevel} (Roller Coaster Hyper-Warp Activated)`);
-    const themeName = this.tunnel.setThemeByLevel(newLevel);
-    this.hud3d.showLevelUpNotice(newLevel, themeName);
-    if (this.audio && typeof this.audio.playWarpSweepSound === 'function') {
-      this.audio.playWarpSweepSound();
+    try {
+      const themeName = this.tunnel.setThemeByLevel(newLevel);
+      if (this.hud3d && typeof this.hud3d.showLevelUpNotice === 'function') {
+        this.hud3d.showLevelUpNotice(newLevel, themeName);
+      }
+      if (this.audio && typeof this.audio.playWarpSweepSound === 'function') {
+        this.audio.playWarpSweepSound();
+      }
+    } catch (e) {
+      console.warn('[3D Tunnel Rush] Exception during level transition:', e);
     }
   }
 
@@ -230,11 +236,11 @@ class GameApp {
       const lookZ = this.player.z - 25.0; // Target look-ahead position down -Z
       const lookCenter = getTunnelCenter(lookZ);
 
-      // In VR Cockpit Mode: position camera group at pilot seat canopy (camZ = player.z + 0.50, camY = shipCenter.y + shipY + 0.45)
+      // In VR Cockpit Mode: position camera group inside pilot canopy behind controls (camZ = player.z + 0.65, camY = shipCenter.y + shipY + 0.50)
       // In 2D Cockpit Mode: position camera group at camZ = player.z - 0.2
       const camX = shipCenter.x + shipX;
-      const camY = shipCenter.y + shipY + (isVR ? 0.45 : 0.35);
-      const camZ = this.player.z + (isVR ? 0.50 : -0.2);
+      const camY = shipCenter.y + shipY + (isVR ? 0.50 : 0.35);
+      const camZ = this.player.z + (isVR ? 0.65 : -0.2);
 
       this.renderer.cameraGroup.position.set(camX, camY, camZ);
 
@@ -267,14 +273,15 @@ class GameApp {
       if (this.player.mesh) this.player.mesh.visible = true;
       if (this.hud3d) this.hud3d.setCockpitVisible(false);
 
-      const camZ = this.player.z + (isVR ? 7.0 : 7.0);
+      // In VR Chase Mode: position camera 8.5m behind player ship in depth (camZ = player.z + 8.5)
+      const camZ = this.player.z + (isVR ? 8.5 : 7.0);
       const lookZ = this.player.z - 3.0;
 
       const camCenter = getTunnelCenter(camZ);
       const lookCenter = getTunnelCenter(lookZ);
 
       const camX = camCenter.x + shipX;
-      const camY = camCenter.y + shipY + (isVR ? 1.4 : 0.9);
+      const camY = camCenter.y + shipY + (isVR ? 1.5 : 0.9);
       this.renderer.cameraGroup.position.set(camX, camY, camZ);
 
       const lookX = lookCenter.x + shipX;
