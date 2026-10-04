@@ -34,12 +34,12 @@ An immersive, high-speed 3D stereoscopic tunnel rush Progressive Web App (PWA) b
 ## 🌟 Key Features
 
 ### 👓 1. Five 3D Viewing Modes, Smart Glasses (HSBS) & Native WebXR VR
-- **2D View**: Standard single-camera 3D viewport.
+- **2D View**: Standard single-camera 3D viewport with dynamic FOV speed surges.
 - **Parallel 3D (Side-by-Side)**: Dual off-axis stereo camera rendering (2:1 aspect ratio) for VR viewers, cardboard headsets, or parallel eye relaxation.
 - **Cross-Eye 3D (Side-by-Side)**: Swapped stereo cameras for cross-eye 3D viewing—no hardware or glasses required!
 - **Smart Glasses 3D (HSBS)**: Widescreen 16:9 Half Side-by-Side 3D output custom-tuned for **RayNeo Air, XREAL Air, Rokid, and TCL Smart Glasses** optical engines (squishing 16:9 camera aspect per eye so hardware optics stretch it back out into crisp, distortion-free 16:9 3D!).
 - **Anaglyph 3D**: True 2-pass Red-Cyan 3D compositing—wear standard Red/Blue 3D glasses!
-- **🥽 Native WebXR Immersive VR**: Integrated WebXR API (`renderer.xr.enabled = true`) allowing **Meta Quest 1/2/3/Pro & Pico** headset users to tap `🥽 VR (Meta Quest)` for native 6DoF/3DoF immersive VR flight with real-time head tracking!
+- **🥽 Native WebXR Immersive VR (Meta Quest 1 / 2 / 3 / Pro & Pico)**: Integrated WebXR API (`renderer.xr.enabled = true`) allowing standalone VR headset users to tap `🥽 VR (Meta Quest)` inside Meta Quest Browser for full **6DoF/3DoF immersive VR flight** with native 90Hz/120Hz headset rendering, real-time head tracking, Meta Quest Touch Controller steering, in-headset score & sightline HUD, and one-touch view mode toggling!
 - **Real-time 3D Controls**: Adjust Eye Separation (IPD slider), Focal Convergence Plane, and Swap Left/Right Eyes on the fly.
 
 ---
@@ -55,9 +55,13 @@ An immersive, high-speed 3D stereoscopic tunnel rush Progressive Web App (PWA) b
 
 ## ℹ️ Technical Clarifications & Rendering Architecture
 
-### 🥽 Native WebXR VR & Side-by-Side (SBS) Dual Engine
-- **Native WebXR Immersive Session**: When running in Meta Quest Browser or WebXR-enabled VR headsets, clicking `🥽 VR (Meta Quest)` launches native WebXR stereoscopic rendering (`renderer.xr.setSession`) with headset lens distortion correction and head tracking.
-- **Side-by-Side (SBS) Browser Rendering**: For non-WebXR browsers, standard 2D displays, or smart glasses, Parallel/Cross/HSBS modes render dual off-axis viewports directly in WebGL.
+### 🥽 Native WebXR VR Engine (Meta Quest 3 & Standalone Headsets)
+- **Native WebXR Immersive Session**: Tapping `🥽 VR (Meta Quest)` inside Meta Quest Browser requests an `immersive-vr` WebXR session (`navigator.xr.requestSession`). Three.js automatically manages dual lens distortion, IPD, and 6DoF head position/orientation tracking.
+- **In-Headset 3D World-Anchored HUD**: The 3D scene HUD (`hud3d.js`) uses `targetCam.getWorldPosition()` and `targetCam.getWorldQuaternion()` to lock live **Score**, **Speed**, **Hearts/Lives**, **Shield Energy %**, **Distance**, and the **Sightline Crosshair Reticle** directly in front of your headset eyes at a comfortable `3.5m` focal depth.
+- **Meta Quest Touch Controller Integration**:
+  - **Thumbstick & Triggers**: Full 4-way analog steering with deadzone filtering and instant release detection.
+  - **Index / Grip Triggers & Action Buttons (`A`/`X`)**: Start, restart, or unpause game sessions directly from inside VR.
+  - **`B` / `Y` Button**: Toggle between **3rd-Person Chase View** (camera positioned 8.5m behind spacecraft) and **1st-Person Cockpit View** (sitting inside seat canopy looking out over the ship nose).
 
 ### 👓 Smart Glasses HSBS (Half Side-by-Side) Mode
 - Smart glasses like RayNeo Air and XREAL Air split a 1080p frame into two halves and stretch each half horizontally by 2x back out to 16:9 for each lens.
