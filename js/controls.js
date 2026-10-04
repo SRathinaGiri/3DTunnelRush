@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY INPUT & CONTROLS HANDLER (KEYBOARD, TOUCH, GYRO)
-   Version: v4.27.0
+   Version: v4.28.0
    ========================================================================== */
 
 export class ControlsHandler {
@@ -400,57 +400,66 @@ export class ControlsHandler {
   }
 
   pollWebXRControllers(renderer) {
-    if (!renderer || !renderer.renderer || !renderer.renderer.xr || !renderer.renderer.xr.isPresenting) return;
+    if (!renderer || !renderer.renderer || !renderer.renderer.xr || !renderer.renderer.xr.isPresenting) return false;
     const session = renderer.renderer.xr.getSession();
-    if (!session || !session.inputSources) return;
+    if (!session || !session.inputSources) return false;
 
-    let left = false;
-    let right = false;
-    let up = false;
-    let down = false;
+    let vrLeft = false;
+    let vrRight = false;
+    let vrUp = false;
+    let vrDown = false;
+    let vrActionPressed = false;
 
     for (const source of session.inputSources) {
       if (source && source.gamepad) {
         const gp = source.gamepad;
         const axes = gp.axes || [];
+        const buttons = gp.buttons || [];
 
-        // Meta Quest Touch Controller Thumbstick Mapping:
-        // axes[2] or axes[0]: Thumbstick X (-1 Left, +1 Right)
-        // axes[3] or axes[1]: Thumbstick Y (-1 Up, +1 Down)
+        // Scan Meta Quest Touch Controller Thumbstick Axes:
+        // Check primary pair [0,1] or secondary pair [2,3]
         let axisX = 0;
         let axisY = 0;
-        if (axes.length >= 4 && (Math.abs(axes[2]) > 0.05 || Math.abs(axes[3]) > 0.05)) {
+        if (axes.length >= 4 && (Math.abs(axes[2]) > 0.15 || Math.abs(axes[3]) > 0.15)) {
           axisX = axes[2];
           axisY = axes[3];
-        } else if (axes.length >= 2) {
+        } else if (axes.length >= 2 && (Math.abs(axes[0]) > 0.15 || Math.abs(axes[1]) > 0.15)) {
           axisX = axes[0];
           axisY = axes[1];
         }
 
-        const deadzone = 0.22;
-        if (axisX < -deadzone) left = true;
-        if (axisX > deadzone) right = true;
-        if (axisY < -deadzone) up = true;    // Pushing thumbstick UP
-        if (axisY > deadzone) down = true;  // Pushing thumbstick DOWN
+        const deadzone = 0.18;
+        if (axisX < -deadzone) vrLeft = true;
+        if (axisX > deadzone) vrRight = true;
+        if (axisY < -deadzone) vrUp = true;    // Pushing thumbstick UP -> fly up
+        if (axisY > deadzone) vrDown = true;  // Pushing thumbstick DOWN -> fly down
 
         // Quest Controller Index Triggers (Button 0) & Grip Triggers (Button 1)
-        if (gp.buttons) {
-          if (gp.buttons[0] && gp.buttons[0].pressed) {
-            if (source.handedness === 'left') left = true;
-            if (source.handedness === 'right') right = true;
-          }
-          if (gp.buttons[1] && gp.buttons[1].pressed) {
-            if (source.handedness === 'left') left = true;
-            if (source.handedness === 'right') right = true;
-          }
+        if (buttons[0] && buttons[0].pressed) {
+          vrActionPressed = true;
+          if (source.handedness === 'left') vrLeft = true;
+          if (source.handedness === 'right') vrRight = true;
+        }
+        if (buttons[1] && buttons[1].pressed) {
+          vrActionPressed = true;
+          if (source.handedness === 'left') vrLeft = true;
+          if (source.handedness === 'right') vrRight = true;
+        }
+
+        // Action Buttons A/B/X/Y or Thumbstick Click
+        if ((buttons[2] && buttons[2].pressed) || (buttons[3] && buttons[3].pressed) || (buttons[4] && buttons[4].pressed)) {
+          vrActionPressed = true;
         }
       }
     }
 
-    if (left) this.keys.left = true;
-    if (right) this.keys.right = true;
-    if (up) this.keys.up = true;
-    if (down) this.keys.down = true;
+    // Direct state update ensures keys return to false when thumbstick or trigger is released
+    this.keys.left = vrLeft;
+    this.keys.right = vrRight;
+    this.keys.up = vrUp;
+    this.keys.down = vrDown;
+
+    return vrActionPressed;
   }
 
   reset() {

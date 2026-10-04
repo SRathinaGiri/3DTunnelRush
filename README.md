@@ -1,6 +1,6 @@
 # 🚀 3D Tunnel Rush PWA (Stereoscopic 3D Game)
 
-[![Version](https://img.shields.io/badge/version-v4.27.0-00f0ff.svg)](./manifest.json)
+[![Version](https://img.shields.io/badge/version-v4.28.0-00f0ff.svg)](./manifest.json)
 [![PWA Ready](https://img.shields.io/badge/PWA-100%25%20Offline-ec4899.svg)](./sw.js)
 [![WebGL](https://img.shields.io/badge/Three.js-WebGL%203D-a855f7.svg)](./js/renderer.js)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
@@ -75,16 +75,17 @@ An immersive, high-speed 3D stereoscopic tunnel rush Progressive Web App (PWA) b
 
 ## 🎮 Controls Summary
 
-| Control Action | Keyboard | Touch / Mobile / VR |
-| :--- | :--- | :--- |
-| **Steer Left** | `Left Arrow` / `A` | Touch Left Half Screen / `◄ LEFT` / Swipe Left |
-| **Steer Right** | `Right Arrow` / `D` | Touch Right Half Screen / `RIGHT ►` / Swipe Right |
-| **Fly Up** | `Up Arrow` / `W` | Touch Top 40% Screen / `▲ UP` / Drag Up |
-| **Fly Down** | `Down Arrow` / `S` | Touch Bottom 40% Screen / `▼ DOWN` / Drag Down |
-| **Pause Game** | `P` / `Space` | `⏸️` Icon Button |
-| **Toggle View** | `V` | `🎥` Icon Button |
-| **Toggle Gyro** | - | `📱` Icon Button |
-| **Toggle Audio** | `M` | `🔊` Icon Button |
+| Control Action | Keyboard | Touch / Mobile | Meta Quest VR Touch Controllers |
+| :--- | :--- | :--- | :--- |
+| **Steer Left** | `Left Arrow` / `A` | Touch Left Half Screen / `◄ LEFT` / Swipe Left | Push Left Thumbstick Left / Pull Left Trigger or Grip |
+| **Steer Right** | `Right Arrow` / `D` | Touch Right Half Screen / `RIGHT ►` / Swipe Right | Push Right Thumbstick Right / Pull Right Trigger or Grip |
+| **Fly Up** | `Up Arrow` / `W` | Touch Top 40% Screen / `▲ UP` / Drag Up | Push Thumbstick Forward / UP |
+| **Fly Down** | `Down Arrow` / `S` | Touch Bottom 40% Screen / `▼ DOWN` / Drag Down | Pull Thumbstick Backward / DOWN |
+| **Start / Restart / Resume** | `Space` / `Enter` | Touch Menu / Game Over Buttons | Pull Index Trigger / Press `A` / `X` Button |
+| **Pause Game** | `P` / `Escape` | `⏸️` Icon Button | `P` key / Menu button |
+| **Toggle View (Chase/Cockpit)** | `V` | `🎥` Icon Button | `🎥` Icon Button |
+| **Toggle Gyro** | - | `📱` Icon Button | - |
+| **Toggle Audio** | `M` | `🔊` Icon Button | - |
 
 ---
 

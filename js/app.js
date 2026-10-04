@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.27.0
+   Version: v4.28.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.27.0';
+    this.version = '4.28.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -78,6 +78,17 @@ class GameApp {
               });
               await this.renderer.renderer.xr.setSession(session);
               console.log(`[3D Tunnel Rush v${this.version}] Entered WebXR Immersive VR Session.`);
+
+              session.addEventListener('select', () => {
+                if (this.state === 'MENU') {
+                  this.startGame();
+                } else if (this.state === 'GAMEOVER') {
+                  this.restartGame();
+                } else if (this.state === 'PAUSED') {
+                  this.togglePause();
+                }
+              });
+
               if (this.state === 'MENU') {
                 this.startGame();
               }
@@ -213,16 +224,17 @@ class GameApp {
 
     const isVR = (this.renderer && this.renderer.renderer && this.renderer.renderer.xr && this.renderer.renderer.xr.isPresenting === true);
 
-    if (this.viewMode === 'COCKPIT' || isVR) {
-      // 1ST-PERSON PILOT COCKPIT VIEW (Default & Best for WebXR VR Headsets)
+    if (this.viewMode === 'COCKPIT') {
+      // 1ST-PERSON PILOT COCKPIT VIEW
       const shipCenter = getTunnelCenter(this.player.z);
       const lookZ = this.player.z - 25.0; // Target look-ahead position down -Z
       const lookCenter = getTunnelCenter(lookZ);
 
-      // Camera group positioned inside the pilot cockpit window
+      // In VR Cockpit Mode: position camera group at pilot seat canopy (camZ = player.z + 0.35, camY = shipCenter.y + shipY + 0.45)
+      // In 2D Cockpit Mode: position camera group at camZ = player.z - 0.2
       const camX = shipCenter.x + shipX;
-      const camY = shipCenter.y + shipY + 0.35; // Pilot eye height
-      const camZ = this.player.z - 0.2;         // In front of ship origin
+      const camY = shipCenter.y + shipY + (isVR ? 0.45 : 0.35);
+      const camZ = this.player.z + (isVR ? 0.35 : -0.2);
 
       this.renderer.cameraGroup.position.set(camX, camY, camZ);
 
@@ -232,8 +244,7 @@ class GameApp {
       const lookPos = new THREE.Vector3(lookX, lookY, lookZ);
 
       if (isVR) {
-        // In WebXR Immersive VR, lock cameraGroup forward direction cleanly down the negative Z flight path
-        // without artificial roll bank, allowing native headset 6DoF/3DoF tracking to control head rotation naturally
+        // In WebXR Immersive VR, lock cameraGroup forward direction cleanly down negative Z flight path
         const forwardDir = new THREE.Vector3().subVectors(lookPos, camPos).normalize();
         if (forwardDir.lengthSq() > 0.0001) {
           this.renderer.cameraGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), forwardDir);
@@ -248,34 +259,43 @@ class GameApp {
         this.renderer.cameraGroup.rotation.z += bankRoll;
       }
 
-      // In Cockpit View, hide exterior ship mesh for 2D screen, but keep ship hull visible in VR
-      if (this.player.mesh) this.player.mesh.visible = isVR ? true : false;
-      if (this.hud3d) this.hud3d.setCockpitVisible(!isVR);
+      // Ship Mesh Visibility: Keep ship model visible in VR so pilot sees ship nose & wings ahead
+      if (this.player.mesh) this.player.mesh.visible = true;
+      if (this.hud3d) this.hud3d.setCockpitVisible(true);
     } else {
-      // 3RD-PERSON CHASE CAMERA VIEW
+      // 3RD-PERSON CHASE CAMERA VIEW (Supports both 2D/3D screen & WebXR VR!)
       if (this.player.mesh) this.player.mesh.visible = true;
       if (this.hud3d) this.hud3d.setCockpitVisible(false);
 
-      const camZ = this.player.z + 7.0;
+      const camZ = this.player.z + (isVR ? 5.5 : 7.0);
       const lookZ = this.player.z - 3.0;
 
       const camCenter = getTunnelCenter(camZ);
       const lookCenter = getTunnelCenter(lookZ);
 
       const camX = camCenter.x + (shipX * 0.70);
-      const camY = camCenter.y + (shipY * 0.70) + 0.9;
+      const camY = camCenter.y + (shipY * 0.70) + (isVR ? 1.2 : 0.9);
       this.renderer.cameraGroup.position.set(camX, camY, camZ);
 
       const lookX = lookCenter.x + (shipX * 0.85);
       const lookY = lookCenter.y + (shipY * 0.85) + 0.2;
-      this.renderer.cameraGroup.lookAt(new THREE.Vector3(lookX, lookY, lookZ));
+      const camPos = new THREE.Vector3(camX, camY, camZ);
+      const lookPos = new THREE.Vector3(lookX, lookY, lookZ);
 
-      let bankRoll = (-slope.dx * 0.30) - (this.player.tiltZ * 0.35);
-      if (this.player.isLevelTransitioning) {
-        const transitionTime = 3.5 - this.player.transitionTimer;
-        bankRoll += Math.sin(transitionTime * 6.5) * 0.22;
+      if (isVR) {
+        const forwardDir = new THREE.Vector3().subVectors(lookPos, camPos).normalize();
+        if (forwardDir.lengthSq() > 0.0001) {
+          this.renderer.cameraGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), forwardDir);
+        }
+      } else {
+        this.renderer.cameraGroup.lookAt(lookPos);
+        let bankRoll = (-slope.dx * 0.30) - (this.player.tiltZ * 0.35);
+        if (this.player.isLevelTransitioning) {
+          const transitionTime = 3.5 - this.player.transitionTimer;
+          bankRoll += Math.sin(transitionTime * 6.5) * 0.22;
+        }
+        this.renderer.cameraGroup.rotation.z += bankRoll;
       }
-      this.renderer.cameraGroup.rotation.z += bankRoll;
     }
 
     // Screen Shake Camera Jitter
@@ -296,12 +316,12 @@ class GameApp {
     const delta = Math.min(Math.max(rawDelta, 0.001), 0.05);
     this.lastDelta = delta;
 
-    if (this.state === 'PLAYING' || this.state === 'WARMUP') {
-      // Poll WebXR VR Controllers (Meta Quest Touch Controllers & Triggers)
-      if (this.controls && typeof this.controls.pollWebXRControllers === 'function') {
-        this.controls.pollWebXRControllers(this.renderer);
-      }
+    // Poll WebXR VR Controllers (Meta Quest Touch Controllers & Triggers) on every frame
+    if (this.controls && typeof this.controls.pollWebXRControllers === 'function') {
+      this.controls.pollWebXRControllers(this.renderer);
+    }
 
+    if (this.state === 'PLAYING' || this.state === 'WARMUP') {
       // Update Player & Controls
       this.player.update(this.controls, delta);
 
