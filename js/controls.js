@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - 4-WAY INPUT & CONTROLS HANDLER (KEYBOARD, TOUCH, GYRO)
-   Version: v4.26.0
+   Version: v4.27.0
    ========================================================================== */
 
 export class ControlsHandler {

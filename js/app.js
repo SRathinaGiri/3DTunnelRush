@@ -1,6 +1,6 @@
 /* ==========================================================================
    3D TUNNEL RUSH - MAIN APPLICATION ENTRY POINT
-   Version: v4.26.0
+   Version: v4.27.0
    ========================================================================== */
 
 import { StereoRenderEngine } from './renderer.js';
@@ -13,7 +13,7 @@ import { HUD3DEngine } from './hud3d.js';
 
 class GameApp {
   constructor() {
-    this.version = '4.26.0';
+    this.version = '4.27.0';
     console.log(`[3D Tunnel Rush v${this.version}] Initializing main application...`);
 
     this.state = 'MENU'; // 'MENU', 'WARMUP', 'PLAYING', 'PAUSED', 'GAMEOVER'
@@ -211,10 +211,12 @@ class GameApp {
     this.renderer.mainCamera.position.set(0, 0, 0);
     this.renderer.mainCamera.rotation.set(0, 0, 0);
 
-    if (this.viewMode === 'COCKPIT') {
-      // 1ST-PERSON PILOT COCKPIT VIEW
+    const isVR = (this.renderer && this.renderer.renderer && this.renderer.renderer.xr && this.renderer.renderer.xr.isPresenting === true);
+
+    if (this.viewMode === 'COCKPIT' || isVR) {
+      // 1ST-PERSON PILOT COCKPIT VIEW (Default & Best for WebXR VR Headsets)
       const shipCenter = getTunnelCenter(this.player.z);
-      const lookZ = this.player.z - 25.0;
+      const lookZ = this.player.z - 25.0; // Target look-ahead position down -Z
       const lookCenter = getTunnelCenter(lookZ);
 
       // Camera group positioned inside the pilot cockpit window
@@ -224,22 +226,31 @@ class GameApp {
 
       this.renderer.cameraGroup.position.set(camX, camY, camZ);
 
-      // Aim camera group straight down the curved tunnel ahead with steering tilt reaction
-      const lookX = lookCenter.x + shipX + (this.player.tiltZ * -2.0);
-      const lookY = lookCenter.y + shipY + (this.player.tiltX * 2.0);
-      this.renderer.cameraGroup.lookAt(new THREE.Vector3(lookX, lookY, lookZ));
+      const camPos = new THREE.Vector3(camX, camY, camZ);
+      const lookX = lookCenter.x + shipX + (this.player.tiltZ * -1.5);
+      const lookY = lookCenter.y + shipY + (this.player.tiltX * 1.5);
+      const lookPos = new THREE.Vector3(lookX, lookY, lookZ);
 
-      // Roll bank with flight inclination & steering roll
-      let bankRoll = (-slope.dx * 0.35) - (this.player.tiltZ * 0.45);
-      if (this.player.isLevelTransitioning) {
-        const transitionTime = 3.5 - this.player.transitionTimer;
-        bankRoll += Math.sin(transitionTime * 6.5) * 0.25;
+      if (isVR) {
+        // In WebXR Immersive VR, lock cameraGroup forward direction cleanly down the negative Z flight path
+        // without artificial roll bank, allowing native headset 6DoF/3DoF tracking to control head rotation naturally
+        const forwardDir = new THREE.Vector3().subVectors(lookPos, camPos).normalize();
+        if (forwardDir.lengthSq() > 0.0001) {
+          this.renderer.cameraGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), forwardDir);
+        }
+      } else {
+        this.renderer.cameraGroup.lookAt(lookPos);
+        let bankRoll = (-slope.dx * 0.35) - (this.player.tiltZ * 0.45);
+        if (this.player.isLevelTransitioning) {
+          const transitionTime = 3.5 - this.player.transitionTimer;
+          bankRoll += Math.sin(transitionTime * 6.5) * 0.25;
+        }
+        this.renderer.cameraGroup.rotation.z += bankRoll;
       }
-      this.renderer.cameraGroup.rotation.z += bankRoll;
 
-      // In Cockpit View, hide exterior ship mesh and show 3D pilot cockpit frame & crosshair reticle
-      if (this.player.mesh) this.player.mesh.visible = false;
-      if (this.hud3d) this.hud3d.setCockpitVisible(true);
+      // In Cockpit View, hide exterior ship mesh for 2D screen, but keep ship hull visible in VR
+      if (this.player.mesh) this.player.mesh.visible = isVR ? true : false;
+      if (this.hud3d) this.hud3d.setCockpitVisible(!isVR);
     } else {
       // 3RD-PERSON CHASE CAMERA VIEW
       if (this.player.mesh) this.player.mesh.visible = true;
