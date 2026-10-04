@@ -39,8 +39,18 @@ An immersive, high-speed 3D stereoscopic tunnel rush Progressive Web App (PWA) b
 - **Cross-Eye 3D (Side-by-Side)**: Swapped stereo cameras for cross-eye 3D viewing—no hardware or glasses required!
 - **Smart Glasses 3D (HSBS)**: Widescreen 16:9 Half Side-by-Side 3D output custom-tuned for **RayNeo Air, XREAL Air, Rokid, and TCL Smart Glasses** optical engines (squishing 16:9 camera aspect per eye so hardware optics stretch it back out into crisp, distortion-free 16:9 3D!).
 - **Anaglyph 3D**: True 2-pass Red-Cyan 3D compositing—wear standard Red/Blue 3D glasses!
-- **🥽 Native WebXR Immersive VR (Meta Quest 1 / 2 / 3 / Pro & Pico)**: Integrated WebXR API (`renderer.xr.enabled = true`) allowing standalone VR headset users to tap `🥽 VR (Meta Quest)` inside Meta Quest Browser for full **6DoF/3DoF immersive VR flight** with native 90Hz/120Hz headset rendering, real-time head tracking, Meta Quest Touch Controller steering, in-headset score & sightline HUD, and one-touch view mode toggling!
+- **🥽 Native WebXR Immersive VR**: Integrated WebXR API (`renderer.xr.enabled = true`) allowing VR headset users to tap `🥽 VR (Meta Quest)` inside Meta Quest Browser for full **6DoF/3DoF immersive VR flight** with native headset-managed WebXR rendering, real-time head tracking, Meta Quest Touch Controller steering, in-headset score & sightline HUD, and one-touch view mode toggling!
 - **Real-time 3D Controls**: Adjust Eye Separation (IPD slider), Focal Convergence Plane, and Swap Left/Right Eyes on the fly.
+
+---
+
+## 📱 Hardware Testing & Device Compatibility
+
+| Category | Verified & Tested Hardware | Designed to Support |
+| :--- | :--- | :--- |
+| **🥽 Standalone WebXR VR** | **Meta Quest 3** (Meta Quest Browser) | Meta Quest 1, Quest 2, Quest Pro, Pico 4 & WebXR-compatible VR headsets |
+| **👓 Smart Glasses (HSBS)** | **RayNeo Air** | XREAL Air, Rokid Max, TCL NxtWear & 16:9 HSBS glasses |
+| **📱 Mobile & Desktop** | Android, iOS, Windows, macOS, Linux | Any modern WebGL / HTML5 browser |
 
 ---
 
@@ -56,7 +66,7 @@ An immersive, high-speed 3D stereoscopic tunnel rush Progressive Web App (PWA) b
 ## ℹ️ Technical Clarifications & Rendering Architecture
 
 ### 🥽 Native WebXR VR Engine (Meta Quest 3 & Standalone Headsets)
-- **Native WebXR Immersive Session**: Tapping `🥽 VR (Meta Quest)` inside Meta Quest Browser requests an `immersive-vr` WebXR session (`navigator.xr.requestSession`). Three.js automatically manages dual lens distortion, IPD, and 6DoF head position/orientation tracking.
+- **Native WebXR Immersive Session**: Tapping `🥽 VR (Meta Quest)` inside Meta Quest Browser requests an `immersive-vr` WebXR session (`navigator.xr.requestSession`). Three.js automatically manages native headset-managed WebXR rendering, dual lens distortion, IPD, and 6DoF head position/orientation tracking.
 - **In-Headset 3D World-Anchored HUD**: The 3D scene HUD (`hud3d.js`) uses `targetCam.getWorldPosition()` and `targetCam.getWorldQuaternion()` to lock live **Score**, **Speed**, **Hearts/Lives**, **Shield Energy %**, **Distance**, and the **Sightline Crosshair Reticle** directly in front of your headset eyes at a comfortable `3.5m` focal depth.
 - **Meta Quest Touch Controller Integration**:
   - **Thumbstick & Triggers**: Full 4-way analog steering with deadzone filtering and instant release detection.
